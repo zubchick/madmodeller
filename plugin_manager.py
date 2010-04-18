@@ -4,6 +4,7 @@
 import os
 import inspect
 
+
 plugin_dir = "plugins"
 
 import plugins.base
