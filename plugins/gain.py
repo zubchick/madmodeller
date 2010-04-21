@@ -6,15 +6,18 @@
 ## version: 0.1
 ## date: 17.01.10
 
-import base
+from base import Block
 
-class Gain(base.Block):
-    """Усилитель
-    """
-    
+class Gain(Block):
+    """ Усилитель """
     def __init__(self, k=1):
-        self._k = k
-        base.Block.__init__()
+        Block.__init__(self)
+        self.k = k
+        self.inputs = [None] # обозначаем что вход 1н
+        self.outputs = [None] # обозначаем что выход 1н
+        self.inp_signals = {0:None}
+        self.out_signals = {0:None}
 
     def execute(self):
-        pass
+        """ На выходе сигнал умноженный на коэффициент усиления """
+        self.out_signals[0] = self.k * self.inp_signals[0]
