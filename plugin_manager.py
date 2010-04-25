@@ -9,15 +9,17 @@ import plugins.base
 def load(plugin_dir="plugins"):
     """
     Процедура подгрузки плагинов из plugin_dir
-    возвращает список классов-блоков
+    возвращает {Имя-плагина:Класс, ...}
 
     """
 
-    class_list = []
+    class_list = set()
+    class_name_list = set()
     # Сюда добавляем имена загруженных модулей
     modules = []
 
     # Перебирем файлы в папке plugins
+    print "Load plugins:"
     for fname in os.listdir(plugin_dir):
 
         # Нас интересуют только файлы с расширением .py
@@ -28,22 +30,18 @@ def load(plugin_dir="plugins"):
 
             # Пропустим файлы base.py и __init__.py
             if module_name != "base" and module_name != "__init__":
-                print "Load module %s" % module_name
+                print "\tLoad module %s" % fname
 
                 # Загружаем модуль и добавляем его имя в список загруженных модулей
                 package_obj = __import__(plugin_dir + "." +  module_name)
                 modules.append(module_name)
-
-                print "dir(package_obj) = " + str(dir(package_obj) )
-                print
             else:
-                print "Skip " + fname
+                print "\tSkip " + fname
 
+    print "\nLoad Classes:"
     # Перебираем загруженные модули
     for modulename in modules:
         module_obj = getattr(package_obj, modulename)
-        print modulename
-        print dir(module_obj)
 
         # Перебираем все, что есть внутри модуля
         for elem in dir(module_obj):
@@ -54,9 +52,11 @@ def load(plugin_dir="plugins"):
 
                 # Класс производный от baseplugin?
                 if issubclass(obj, plugins.base.Block):
-                    class_list.append(obj)
+                    class_list.add(obj)
+                    class_name_list.add(obj.name)
+                    print '\tLoad Class ', obj
 
-    return class_list
+    return dict(zip(class_name_list, class_list))
 
 if __name__ == '__main__':
     print load()
