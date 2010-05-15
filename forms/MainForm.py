@@ -3,6 +3,7 @@
 
 from PyQt4 import QtGui, QtCore
 import sys
+import about
 
 class MyMainWindow(QtGui.QMainWindow):
     def __init__(self, parent=None):
@@ -12,21 +13,21 @@ class MyMainWindow(QtGui.QMainWindow):
         MainWindow.setWindowTitle(u'MadModeller')
         MainWindow.resize(600, 450)
 
-        self.main = QtGui.QWidget(MainWindow)
+        self.main = MainWindow
         self.graphicsView = QtGui.QGraphicsView(self.main)
         MainWindow.setCentralWidget(self.graphicsView)
 
         self.menubar = QtGui.QMenuBar(MainWindow)
 
-
         self.menuFile = QtGui.QMenu(self.menubar)
-        self.menuFile =self.menubar.addMenu(u'&Файл')
+        self.menuFile = self.menubar.addMenu(u'&Файл')
         ## self.menuEdit = QtGui.QMenu(self.menubar)
-        ## self.menuEdit =self.menubar.addMenu(u'&Правка')
+        ## self.menuEdit = self.menubar.addMenu(u'&Правка')
         self.menuTools = QtGui.QMenu(self.menubar)
-        self.menuTools =self.menubar.addMenu(u'&Инструменты')
+        self.menuTools = self.menubar.addMenu(u'&Инструменты')
         self.menuHelp = QtGui.QMenu(self.menubar)
-        self.menuHelp =self.menubar.addMenu(u'&Справка')
+        self.menuHelp = self.menubar.addMenu(u'&Справка')
+
         MainWindow.setMenuBar(self.menubar)
 
 
@@ -85,11 +86,15 @@ class MyMainWindow(QtGui.QMainWindow):
         act_about = QtGui.QAction(QtGui.QIcon('../images/about.png'),
                                  u'О программе', self.main)
         act_about.setStatusTip(u'О программе')
+        MainWindow.connect(act_about, QtCore.SIGNAL('triggered()'),
+                           self.showAboutWindow)
 
         self.menuFile.addAction(act_open)
         self.menuFile.addAction(act_save)
         self.menuFile.addAction(act_save_as)
         self.menuFile.addAction(act_exit)
+
+        ## self.menuEdit.addAction(act_help)
 
         self.menuTools.addAction(act_plugins)
         self.menuTools.addAction(act_console)
@@ -110,6 +115,7 @@ class MyMainWindow(QtGui.QMainWindow):
         toolbar.addAction(act_run)
         toolbar.addAction(act_help)
         toolbar.addAction(act_exit)
+        toolbar.setWindowTitle(u'Панель инструментов')
         MainWindow.addToolBar(toolbar)
 
         self.statusbar = QtGui.QStatusBar(MainWindow)
@@ -117,12 +123,18 @@ class MyMainWindow(QtGui.QMainWindow):
 
         self.dockWidget = QtGui.QDockWidget(MainWindow)
         self.dockWidgetContents = QtGui.QWidget()
+        self.dockWidget.setWindowTitle(u'Блоки')
+        self.dockWidget.setMinimumSize(150, 150)
 
         self.gridLayoutWidget = QtGui.QWidget(self.dockWidgetContents)
         self.gridLayout = QtGui.QGridLayout(self.gridLayoutWidget)
 
         self.dockWidget.setWidget(self.dockWidgetContents)
         MainWindow.addDockWidget(QtCore.Qt.DockWidgetArea(1), self.dockWidget)
+
+    def showAboutWindow(self):
+        about_form, about_window = about.init(self.main)
+        about_window.show()
 
 
 def init():
