@@ -15,7 +15,9 @@ class Block(object):
         self.type = ''
         self.defaults = {}
 
-    name = "Anonimus" # Отображаемое имя блока
+    name = u"Anonimus" # Отображаемое имя блока
+    doc = u'Ничего не делает. Абстрактный клаасс. Вы не должны видеть эту надпись.'
+    image = "images/blocks/default_block.png"
 
     def execute(self):
         """

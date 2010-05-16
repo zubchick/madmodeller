@@ -51,10 +51,10 @@ def load(plugin_dir="plugins"):
             if inspect.isclass(obj):
 
                 # Класс производный от baseplugin?
-                if issubclass(obj, plugins.base.Block):
+                if (issubclass(obj, plugins.base.Block)): #and obj != plugins.base.Block):
                     class_list.add(obj)
                     class_name_list.add(obj.name)
-                    print '\tLoad Class ', obj
+                    print '\tLoad Class ', objx
 
     return dict(zip(class_name_list, class_list))
 

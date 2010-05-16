@@ -18,8 +18,9 @@ class Gain(Block):
         self.inp_signals = {0:None}
         self.out_signals = {0:None}
 
-    name = "Gain"
-
+    image = 'images/blocks/gain.png'
+    name = u"Gain"
+    doc = u"""Увеличивает приходящий сигнал на постоянный коэффициент."""
     def execute(self):
         """ На выходе сигнал умноженный на коэффициент усиления """
         self.out_signals[0] = self.k * self.inp_signals[0]

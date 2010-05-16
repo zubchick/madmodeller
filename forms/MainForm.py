@@ -4,6 +4,7 @@
 from PyQt4 import QtGui, QtCore
 import sys
 import about
+import flowlayout as flow
 
 class MyMainWindow(QtGui.QMainWindow):
     def __init__(self, parent=None):
@@ -32,26 +33,26 @@ class MyMainWindow(QtGui.QMainWindow):
 
 
         # open
-        act_open = QtGui.QAction(QtGui.QIcon('../images/open.png'),
+        act_open = QtGui.QAction(QtGui.QIcon('images/open.png'),
                                  u'Открыть', self.main)
         act_open.setShortcut('Ctrl+O')
         act_open.setStatusTip(u'Открыть файл')
 
 
         # save
-        act_save = QtGui.QAction(QtGui.QIcon('../images/save.png'),
+        act_save = QtGui.QAction(QtGui.QIcon('images/save.png'),
                                  u'Сохранить', self.main)
         act_save.setShortcut('Ctrl+S')
         act_save.setStatusTip(u'Сохранить файл')
 
         # save as
-        act_save_as = QtGui.QAction(QtGui.QIcon('../images/save_as.png'),
+        act_save_as = QtGui.QAction(QtGui.QIcon('images/save_as.png'),
                                  u'Сохранить как', self.main)
         act_save_as.setShortcut('Ctrl+Shift+S')
         act_save_as.setStatusTip(u'Сохранить файл как...')
 
         # exit
-        act_exit = QtGui.QAction(QtGui.QIcon('../images/exit.png'),
+        act_exit = QtGui.QAction(QtGui.QIcon('images/exit.png'),
                                  u'Выход', self.main)
         act_exit.setShortcut('Ctrl+Q')
         act_exit.setStatusTip(u'Выйти из приложения')
@@ -59,31 +60,31 @@ class MyMainWindow(QtGui.QMainWindow):
                      QtCore.SLOT('close()'))
 
         # plugin manager
-        act_plugins = QtGui.QAction(QtGui.QIcon('../images/plugins.png'),
+        act_plugins = QtGui.QAction(QtGui.QIcon('images/plugins.png'),
                                  u'Блоки', self.main)
         act_plugins.setShortcut('Ctrl+P')
         act_plugins.setStatusTip(u'Окно с блоками')
 
         # console
-        act_console = QtGui.QAction(QtGui.QIcon('../images/console.png'),
+        act_console = QtGui.QAction(QtGui.QIcon('images/console.png'),
                                  u'Консоль', self.main)
         act_console.setShortcut('Ctrl+C')
         act_console.setStatusTip(u'Консоль отладки')
 
         # run
-        act_run = QtGui.QAction(QtGui.QIcon('../images/run.png'),
+        act_run = QtGui.QAction(QtGui.QIcon('images/run.png'),
                                  u'Запуск', self.main)
         act_run.setShortcut('Ctrl+R')
         act_run.setStatusTip(u'Запуск симуляции')
 
         # help
-        act_help = QtGui.QAction(QtGui.QIcon('../images/help.png'),
+        act_help = QtGui.QAction(QtGui.QIcon('images/help.png'),
                                  u'Справка', self.main)
         act_help.setShortcut('F1')
         act_help.setStatusTip(u'Открыть справку')
 
         # about
-        act_about = QtGui.QAction(QtGui.QIcon('../images/about.png'),
+        act_about = QtGui.QAction(QtGui.QIcon('images/about.png'),
                                  u'О программе', self.main)
         act_about.setStatusTip(u'О программе')
         MainWindow.connect(act_about, QtCore.SIGNAL('triggered()'),
@@ -124,10 +125,15 @@ class MyMainWindow(QtGui.QMainWindow):
         self.dockWidget = QtGui.QDockWidget(MainWindow)
         self.dockWidgetContents = QtGui.QWidget()
         self.dockWidget.setWindowTitle(u'Блоки')
-        self.dockWidget.setMinimumSize(150, 150)
+        self.dockWidget.setMinimumSize(180, 180)
 
-        self.gridLayoutWidget = QtGui.QWidget(self.dockWidgetContents)
-        self.gridLayout = QtGui.QGridLayout(self.gridLayoutWidget)
+        self.flowlayout = flow.FlowLayout()
+        ## self.flowlayout.addWidget(QtGui.QPushButton("Short"))
+        ## self.flowlayout.addWidget(QtGui.QPushButton("Longer"))
+        ## self.flowlayout.addWidget(QtGui.QPushButton("Different text"))
+        ## self.flowlayout.addWidget(QtGui.QPushButton("More text"))
+        ## self.flowlayout.addWidget(QtGui.QPushButton("Even longer button text"))
+        self.dockWidgetContents.setLayout(self.flowlayout)
 
         self.dockWidget.setWidget(self.dockWidgetContents)
         MainWindow.addDockWidget(QtCore.Qt.DockWidgetArea(1), self.dockWidget)
@@ -136,9 +142,37 @@ class MyMainWindow(QtGui.QMainWindow):
         about_form, about_window = about.init(self.main)
         about_window.show()
 
+    def set_blocks(self, block_dict):
+        """ рисует кнопочки-блоки """
+        self.blocks = {}
+        iblocks = {}
+        for key, value in block_dict.items():
+            print key, value
+            Iblock = QtGui.QWidget()
+
+            layout = QtGui.QGridLayout(Iblock)
+
+            label = QtGui.QLabel(key)
+            label.setAlignment(QtCore.Qt.AlignCenter)
+            font = QtGui.QFont()
+            font.setPointSize(7)
+            label.setFont(font)
+
+            button = QtGui.QPushButton()
+            button.setIcon(QtGui.QIcon(value.image))
+            button.setIconSize(QtCore.QSize(30, 30))
+            button.setStatusTip(value.doc)
+
+            layout.addWidget(button, 0, 1, 1, 1)
+            layout.addWidget(label, 1, 0, 1, 3)
+
+            Iblock.class_ = value
+            self.blocks[key] = button
+            iblocks[key] = Iblock
+            self.flowlayout.addWidget(iblocks[key])
+
 
 def init():
-    # инициализируем Qt
     app = QtGui.QApplication(sys.argv)
     # создаем отдельный, независимый объект окна...
     MainWindow = QtGui.QMainWindow()
