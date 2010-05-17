@@ -13,8 +13,8 @@ def load(plugin_dir="plugins"):
 
     """
 
-    class_list = set()
-    class_name_list = set()
+    class_list = []#set()
+    class_name_list = []#set()
     # Сюда добавляем имена загруженных модулей
     modules = []
 
@@ -51,10 +51,11 @@ def load(plugin_dir="plugins"):
             if inspect.isclass(obj):
 
                 # Класс производный от baseplugin?
-                if (issubclass(obj, plugins.base.Block)): #and obj != plugins.base.Block):
-                    class_list.add(obj)
-                    class_name_list.add(obj.name)
-                    print '\tLoad Class ', objx
+                if (issubclass(obj, plugins.base.Block) and
+                    obj != plugins.base.Block):
+                    class_list.append(obj)
+                    class_name_list.append(obj.name)
+                    print '\tLoad Class ', obj
 
     return dict(zip(class_name_list, class_list))
 

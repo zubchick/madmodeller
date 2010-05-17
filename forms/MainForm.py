@@ -145,7 +145,6 @@ class MyMainWindow(QtGui.QMainWindow):
     def set_blocks(self, block_dict):
         """ рисует кнопочки-блоки """
         self.blocks = {}
-        iblocks = {}
         for key, value in block_dict.items():
             print key, value
             Iblock = QtGui.QWidget()
@@ -168,8 +167,7 @@ class MyMainWindow(QtGui.QMainWindow):
 
             Iblock.class_ = value
             self.blocks[key] = button
-            iblocks[key] = Iblock
-            self.flowlayout.addWidget(iblocks[key])
+            self.flowlayout.addWidget(Iblock)
 
 
 def init():

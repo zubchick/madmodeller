@@ -13,8 +13,7 @@ class Splitter(Block):
     def __init__(self, k=1):
         Block.__init__(self)
 
-    ## image = 'images/blocks/gain.png'
-    name = u"Razvilka"
+    name = u"Splitter"
     doc = u'Разделяет сигнал на несколько одинаковых'
 
     def execute(self):

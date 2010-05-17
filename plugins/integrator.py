@@ -13,7 +13,6 @@ class Integrator(Block):
     def __init__(self, k=1):
         Block.__init__(self)
 
-    ## image = 'images/blocks/gain.png'
     name = u"Integrator"
     doc = u'Интегратор интегрирует интегрированные интегралы'
 
