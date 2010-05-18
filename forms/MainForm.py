@@ -146,7 +146,7 @@ class MyMainWindow(QtGui.QMainWindow):
         """ рисует кнопочки-блоки """
         self.blocks = {}
         for key, value in block_dict.items():
-            print key, value
+            ## print key, value
             Iblock = QtGui.QWidget()
 
             layout = QtGui.QGridLayout(Iblock)
