@@ -48,14 +48,13 @@ def load(plugin_dir="plugins"):
             obj = getattr(module_obj, elem)
 
             # Это класс?
-            if inspect.isclass(obj):
-
-                # Класс производный от baseplugin?
-                if (issubclass(obj, plugins.base.Block) and
-                    obj != plugins.base.Block):
-                    class_list.append(obj)
-                    class_name_list.append(obj.name)
-                    print '\tLoad Class ', obj
+            # Класс производный от baseplugin?
+            if (inspect.isclass(obj) and
+                issubclass(obj, plugins.base.Block) and
+                obj != plugins.base.Block):
+                class_list.append(obj)
+                class_name_list.append(obj.name)
+                print '\tLoad Class ', obj
 
     return dict(zip(class_name_list, class_list))
 
