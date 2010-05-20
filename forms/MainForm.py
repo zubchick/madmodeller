@@ -151,9 +151,10 @@ class MyMainWindow(QtGui.QMainWindow):
         """ рисует кнопочки-блоки """
         self.blocks = {}
         for key, value in block_dict.items():
-            Iblock = QtGui.QWidget()
+            ## print key, value
+            iBlock = QtGui.QWidget()
 
-            layout = QtGui.QGridLayout(Iblock)
+            layout = QtGui.QGridLayout(iBlock)
 
             label = QtGui.QLabel(key)
             label.setAlignment(QtCore.Qt.AlignCenter)
@@ -169,15 +170,15 @@ class MyMainWindow(QtGui.QMainWindow):
             layout.addWidget(button, 0, 1, 1, 1)
             layout.addWidget(label, 1, 0, 1, 3)
 
-            Iblock.class_ = value
-#            button.clicked.connect(self.add_block(value))
+            button.clicked.connect(lambda val = value: self.add_block(val))
             self.blocks[key] = button
-            self.flowlayout.addWidget(Iblock)
+            self.flowlayout.addWidget(iBlock)
 
 
 #    @QtCore.pyqtSlot()
     def add_block(self, BlockClass):
         """ Добавить блок на рабочее поле """
+        print 'Add to form ', BlockClass
         item = IBlock(QtGui.QPixmap(BlockClass.image), None, self.scene)
         item.block = BlockClass()
         item.setZValue(2)
