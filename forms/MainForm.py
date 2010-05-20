@@ -169,13 +169,12 @@ class MyMainWindow(QtGui.QMainWindow):
 
             layout.addWidget(button, 0, 1, 1, 1)
             layout.addWidget(label, 1, 0, 1, 3)
-
-            button.clicked.connect(lambda val = value: self.add_block(val))
+            self.connect(button, QtCore.SIGNAL("clicked()"),
+                         lambda val=value: self.add_block(val))
+            ## button.clicked.connect(lambda : self.add_block(value))
             self.blocks[key] = button
             self.flowlayout.addWidget(iBlock)
 
-
-#    @QtCore.pyqtSlot()
     def add_block(self, BlockClass):
         """ Добавить блок на рабочее поле """
         print 'Add to form ', BlockClass
