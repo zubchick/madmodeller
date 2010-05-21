@@ -18,13 +18,17 @@ class MyMainWindow(QtGui.QMainWindow):
 
         self.main = MainWindow
 
-        self.scene = Scene()
+        # scene
+        self.scene = QtGui.QGraphicsScene()
+
+        # self.scene = Scene()
         # graphics
         self.view = QtGui.QGraphicsView(self.scene, self.main)
         # параметры качества прорисовки для виджета представления:
         self.view.setRenderHints(QtGui.QPainter.Antialiasing |
                                  QtGui.QPainter.SmoothPixmapTransform)
 
+        self.background = self.scene.addPixmap(QtGui.QPixmap("")) # без фона, пока
 
         MainWindow.setCentralWidget(self.view)
 
@@ -41,8 +45,13 @@ class MyMainWindow(QtGui.QMainWindow):
 
         MainWindow.setMenuBar(self.menubar)
 
+        # background-image
+        act_bgr_img = QtGui.QAction(QtGui.QIcon('images/background.png'),
+                                 u'Установить фон', self.main)
+        act_bgr_img.setStatusTip(u'Устанофить фон для рабочей области')
+        MainWindow.connect(act_bgr_img, QtCore.SIGNAL('triggered()'),
+                           self.add_background)
 
-        # open
         act_open = QtGui.QAction(QtGui.QIcon('images/open.png'),
                                  u'Открыть', self.main)
         act_open.setShortcut('Ctrl+O')
@@ -123,9 +132,11 @@ class MyMainWindow(QtGui.QMainWindow):
         toolbar.addAction(act_open)
         toolbar.addAction(act_save)
         toolbar.addAction(act_save_as)
+        toolbar.addAction(act_bgr_img)
         toolbar.addAction(act_run)
         toolbar.addAction(act_help)
         toolbar.addAction(act_exit)
+
         toolbar.setWindowTitle(u'Панель инструментов')
         MainWindow.addToolBar(toolbar)
 
@@ -142,6 +153,7 @@ class MyMainWindow(QtGui.QMainWindow):
 
         self.dockWidget.setWidget(self.dockWidgetContents)
         MainWindow.addDockWidget(QtCore.Qt.DockWidgetArea(1), self.dockWidget)
+
 
     def showAboutWindow(self):
         about_form, about_window = about.init(self.main)
@@ -177,76 +189,88 @@ class MyMainWindow(QtGui.QMainWindow):
 
     def add_block(self, BlockClass):
         """ Добавить блок на рабочее поле """
-        print 'Add to form ', BlockClass
-        item = IBlock(QtGui.QPixmap(BlockClass.image), None, self.scene)
-        item.block = BlockClass()
-        item.setZValue(2)
+        item = self.scene.addPixmap(QtGui.QPixmap(BlockClass.image))
+        item.setFlags(QtGui.QGraphicsItem.ItemIsMovable)
+        item.setZValue(3)
+        ## item = IBlock(QtGui.QPixmap(BlockClass.image), None, self.scene)
+        ## item.block = BlockClass()
+        ## item.setZValue(2)
         self.block_list.append(item)
+        print 'Add to form ', BlockClass
+
+    def add_background(self):
+        """ Добавить фоновую картинку на рабочее поле """
+        img = QtGui.QFileDialog.getOpenFileName(caption = u'Выбрать фон',
+                                                filter = u'Images (*.png *.jpg)')
+        ## img = 'images/save_as.png'
+        self.scene.removeItem(self.background)
+        self.background = self.scene.addPixmap(QtGui.QPixmap(img))
+        self.background.setFlags(QtGui.QGraphicsItem.ItemIsMovable)
+        print 'Background add to form ', img
+
+## class Scene(QtGui.QGraphicsScene):
+##     def __init__(self, parent = None):
+##         QtGui.QGraphicsScene.__init__(self, parent)
+
+##     # операция drag and drop входит в область сцены
+##     def dragEnterEvent(self, event):
+##         item = event.mimeData().IBlock
+##         # временный "затемнённый" рисунок перетаскиваемой картинки:
+##         tempPixmap = QtGui.QPixmap(item.pixmap())
+##         ## painter = QtGui.QPainter()
+##         ## painter.begin(tempPixmap)
+##         ## painter.fillRect(item.pixmap().rect(), QtGui.QColor(127, 127, 127, 127))
+##         ## painter.end()
+##         item.setPixmap(tempPixmap)
+
+##     ## # операция drag and drop покидает область сцены
+##     ## def dragLeaveEvent(self, event):
+##     ##     item = event.mimeData().IBlock
+##     ##     # восстанавливаем рисунок перетаскиваемой картинки:
+##     ##     pixmap = QtGui.QPixmap(event.mimeData().imageData())
+##     ##     item.setPixmap(pixmap)
+
+##     # в процессе выполнения операции drag and drop
+##     def dragMoveEvent(self, event):
+##         pass
+
+##     # завершение операции drag and drop
+##     def dropEvent(self, event):
+##         # создание копии перенесённого элемента на новом месте:
+##         pixmap = QtGui.QPixmap(event.mimeData().imageData())
+##         item = IBlock(pixmap, None, self)
+##         # установка положения элемента,
+##         # координаты курсора мыши на сцене корректируем координатами курсора мыши на элементе:
+##         item.setPos(event.scenePos() - event.mimeData().Pos)
+##         # удаление перенесённого элемента:
+##         self.removeItem(event.mimeData().IBlock)
 
 
-class Scene(QtGui.QGraphicsScene):
-    def __init__(self, parent = None):
-        QtGui.QGraphicsScene.__init__(self, parent)
+## class IBlock(QtGui.QGraphicsPixmapItem):
+##     def __init__(self, pixmap, parent = None, scene = None):
+##         QtGui.QGraphicsPixmapItem.__init__(self, pixmap, parent, scene)
+##         self.setTransformationMode(QtCore.Qt.SmoothTransformation) # качество прорисовки
 
-    # операция drag and drop входит в область сцены
-    def dragEnterEvent(self, event):
-        item = event.mimeData().IBlock
-        # временный "затемнённый" рисунок перетаскиваемой картинки:
-        tempPixmap = QtGui.QPixmap(item.pixmap())
-        painter = QtGui.QPainter()
-        painter.begin(tempPixmap)
-        painter.fillRect(item.pixmap().rect(), QtGui.QColor(127, 127, 127, 127))
-        painter.end()
-        item.setPixmap(tempPixmap)
+##     def mousePressEvent(self, event):
+##         if event.button() != QtCore.Qt.LeftButton: # только левая клавиша мыши
+##             event.ignore()
+##             return
+##         drag = QtGui.QDrag(event.widget()) # объект Drag
+##         mime = QtCore.QMimeData()
+##         mime.setImageData(QtCore.QVariant(self.pixmap())) # запоминаем рисунок
+##         mime.Pos = event.pos() # запоминаем позицию события в координатах элемента
+##         mime.z = self.zValue() # запоминаем z-позицию рисунка
+##         mime.IBlock = self # запоминаем сам элемент, который переносится
+##         # примечание: предыдущие три "запоминания" можно реализовать
+##         # и с помощью более "понятного" mime.setData(),
+##         # особенно, если нужно передавать данные не только в пределах одного приложения
+##         # (тогда использование mime.setData() будет даже предпочтительнее)
+##         drag.setMimeData(mime)
 
-    # операция drag and drop покидает область сцены
-    def dragLeaveEvent(self, event):
-        item = event.mimeData().IBlock
-        # восстанавливаем рисунок перетаскиваемой картинки:
-        pixmap = QtGui.QPixmap(event.mimeData().imageData())
-        item.setPixmap(pixmap)
+##         drag.setPixmap(self.pixmap()) # рисунок, отображающийся в процессе переноса
+##         drag.setHotSpot(event.pos().toPoint()) # позиция "ухватки"
 
-    # в процессе выполнения операции drag and drop
-    def dragMoveEvent(self, event):
-        pass
-
-    # завершение операции drag and drop
-    def dropEvent(self, event):
-        # создание копии перенесённого элемента на новом месте:
-        pixmap = QtGui.QPixmap(event.mimeData().imageData())
-        item = IBlock(pixmap, None, self)
-        # установка положения элемента,
-        # координаты курсора мыши на сцене корректируем координатами курсора мыши на элементе:
-        item.setPos(event.scenePos() - event.mimeData().Pos)
-        # удаление перенесённого элемента:
-        self.removeItem(event.mimeData().IBlock)
-
-
-class IBlock(QtGui.QGraphicsPixmapItem):
-    def __init__(self, pixmap, parent = None, scene = None):
-        QtGui.QGraphicsPixmapItem.__init__(self, pixmap, parent, scene)
-        self.setTransformationMode(QtCore.Qt.SmoothTransformation) # качество прорисовки
-
-    def mousePressEvent(self, event):
-        if event.button() != QtCore.Qt.LeftButton: # только левая клавиша мыши
-            event.ignore()
-            return
-        drag = QtGui.QDrag(event.widget()) # объект Drag
-        mime = QtCore.QMimeData()
-        mime.setImageData(QtCore.QVariant(self.pixmap())) # запоминаем рисунок
-        mime.Pos = event.pos() # запоминаем позицию события в координатах элемента
-        mime.z = self.zValue() # запоминаем z-позицию рисунка
-        mime.IBlock = self # запоминаем сам элемент, который переносится
-        # примечание: предыдущие три "запоминания" можно реализовать
-        # и с помощью более "понятного" mime.setData(),
-        # особенно, если нужно передавать данные не только в пределах одного приложения
-        # (тогда использование mime.setData() будет даже предпочтительнее)
-        drag.setMimeData(mime)
-
-        drag.setPixmap(self.pixmap()) # рисунок, отображающийся в процессе переноса
-        drag.setHotSpot(event.pos().toPoint()) # позиция "ухватки"
-
-        drag.start() # запуск (начало) перетаскивания
+##         drag.start() # запуск (начало) перетаскивания
 
 
 def init():
