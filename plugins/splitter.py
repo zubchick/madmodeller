@@ -15,6 +15,7 @@ class Splitter(Block):
 
     name = u"Splitter"
     doc = u'Разделяет сигнал на несколько одинаковых'
+    image = u'images/blocks/splitter.png'
 
     def execute(self):
         pass

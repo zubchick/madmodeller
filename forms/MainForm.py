@@ -146,7 +146,7 @@ class MyMainWindow(QtGui.QMainWindow):
         self.dockWidget = QtGui.QDockWidget(MainWindow)
         self.dockWidgetContents = QtGui.QWidget()
         self.dockWidget.setWindowTitle(u'Блоки')
-        self.dockWidget.setMinimumSize(180, 180)
+        self.dockWidget.setMinimumSize(180, 50)
 
         self.flowlayout = flow.FlowLayout()
         self.dockWidgetContents.setLayout(self.flowlayout)
@@ -201,7 +201,7 @@ class MyMainWindow(QtGui.QMainWindow):
     def add_background(self):
         """ Добавить фоновую картинку на рабочее поле """
         img = QtGui.QFileDialog.getOpenFileName(caption = u'Выбрать фон',
-                                                filter = u'Images (*.png *.jpg)')
+                                                filter = u'Картинки (*.png *.jpg)')
         ## img = 'images/save_as.png'
         self.scene.removeItem(self.background)
         self.background = self.scene.addPixmap(QtGui.QPixmap(img))

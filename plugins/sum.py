@@ -15,6 +15,7 @@ class Sum(Block):
 
     name = u"Sum"
     doc = u'Складывает входящие сигналы'
+    image = u'images/blocks/sum.png'
 
     def execute(self):
         pass
