@@ -45,6 +45,16 @@ class MyMainWindow(QtGui.QMainWindow):
 
         MainWindow.setMenuBar(self.menubar)
 
+        # mode - состояние программы
+        self.mode = 'normal'
+
+        # draw - line
+        act_draw_line = QtGui.QAction(QtGui.QIcon('images/draw_line.png'),
+                                 u'Установить связь', self.main)
+        act_draw_line.setStatusTip(u'Установить связь между блоками')
+        MainWindow.connect(act_draw_line, QtCore.SIGNAL('triggered()'),
+                           self.draw_line)
+
         # background-image
         act_bgr_img = QtGui.QAction(QtGui.QIcon('images/background.png'),
                                  u'Установить фон', self.main)
@@ -52,11 +62,11 @@ class MyMainWindow(QtGui.QMainWindow):
         MainWindow.connect(act_bgr_img, QtCore.SIGNAL('triggered()'),
                            self.add_background)
 
+        # open
         act_open = QtGui.QAction(QtGui.QIcon('images/open.png'),
                                  u'Открыть', self.main)
         act_open.setShortcut('Ctrl+O')
         act_open.setStatusTip(u'Открыть файл')
-
 
         # save
         act_save = QtGui.QAction(QtGui.QIcon('images/save.png'),
@@ -133,6 +143,7 @@ class MyMainWindow(QtGui.QMainWindow):
         toolbar.addAction(act_save)
         toolbar.addAction(act_save_as)
         toolbar.addAction(act_bgr_img)
+        toolbar.addAction(act_draw_line)
         toolbar.addAction(act_run)
         toolbar.addAction(act_help)
         toolbar.addAction(act_exit)
@@ -189,24 +200,45 @@ class MyMainWindow(QtGui.QMainWindow):
 
     def add_block(self, BlockClass):
         """ Добавить блок на рабочее поле """
-        item = self.scene.addPixmap(QtGui.QPixmap(BlockClass.image))
-        item.setFlags(QtGui.QGraphicsItem.ItemIsMovable)
-        item.setZValue(3)
-        ## item = IBlock(QtGui.QPixmap(BlockClass.image), None, self.scene)
-        ## item.block = BlockClass()
-        ## item.setZValue(2)
-        self.block_list.append(item)
-        print 'Add to form ', BlockClass
+        ## item = self.scene.addPixmap(QtGui.QPixmap(BlockClass.image))
+        ## item.setFlags(QtGui.QGraphicsItem.ItemIsMovable)
+        ## item.setZValue(3)
+        if self.mode == 'normal':
+            item = IBlock(QtGui.QPixmap(BlockClass.image), None, self.scene)
+            item.block = BlockClass()
+            item.block.index = hash(str(item.block))
+            item.setZValue(3)
+            item.setFlags(QtGui.QGraphicsItem.ItemIsMovable)
+
+            self.block_list.append(item)
+            print 'Add to form ', BlockClass
 
     def add_background(self):
         """ Добавить фоновую картинку на рабочее поле """
-        img = QtGui.QFileDialog.getOpenFileName(caption = u'Выбрать фон',
-                                                filter = u'Картинки (*.png *.jpg)')
-        ## img = 'images/save_as.png'
-        self.scene.removeItem(self.background)
-        self.background = self.scene.addPixmap(QtGui.QPixmap(img))
-        self.background.setFlags(QtGui.QGraphicsItem.ItemIsMovable)
-        print 'Background add to form ', img
+        if self.mode == 'normal':
+            img = QtGui.QFileDialog.getOpenFileName(caption = u'Выбрать фон',
+                                                    filter = u'Картинки (*.png *.jpg)')
+            self.scene.removeItem(self.background)
+            self.background = self.scene.addPixmap(QtGui.QPixmap(img))
+            self.background.setFlags(QtGui.QGraphicsItem.ItemIsMovable)
+            print 'Background add to form ', img
+
+    def draw_line(self):
+        """ Рисует линию между двумя блоками """
+        cursor = QtGui.QCursor(QtGui.QPixmap('images/draw_line.png'))
+        self.view.setCursor(cursor)
+
+
+class IBlock(QtGui.QGraphicsPixmapItem):
+    def __init__(self, pixmap, parent = None, scene = None):
+        QtGui.QGraphicsPixmapItem.__init__(self, pixmap, parent, scene)
+
+    def mousePressEvent(self, event):
+        if event.button() != QtCore.Qt.LeftButton: # только левая клавиша мыши
+            event.ignore()
+            return
+        print 'You pressed ', self.block
+
 
 ## class Scene(QtGui.QGraphicsScene):
 ##     def __init__(self, parent = None):
