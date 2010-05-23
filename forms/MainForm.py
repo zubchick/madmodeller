@@ -4,7 +4,11 @@
 from PyQt4 import QtGui, QtCore
 import sys
 import about
+import prop
 import flowlayout as flow
+
+## def ViewMousePressEvent(obj):
+##     obj.set_normal_mode(obj)
 
 class MyMainWindow(QtGui.QMainWindow):
     def __init__(self, parent=None):
@@ -19,14 +23,15 @@ class MyMainWindow(QtGui.QMainWindow):
         self.main = MainWindow
 
         # scene
-        self.scene = QtGui.QGraphicsScene()
+        #self.scene = QtGui.QGraphicsScene()
 
-        # self.scene = Scene()
+        self.scene = Scene()
         # graphics
         self.view = QtGui.QGraphicsView(self.scene, self.main)
         # параметры качества прорисовки для виджета представления:
         self.view.setRenderHints(QtGui.QPainter.Antialiasing |
                                  QtGui.QPainter.SmoothPixmapTransform)
+        ## self.view.mousePressEvent = ViewMousePressEvent
 
         self.background = self.scene.addPixmap(QtGui.QPixmap("")) # без фона, пока
 
@@ -209,7 +214,7 @@ class MyMainWindow(QtGui.QMainWindow):
             item.block.index = hash(str(item.block))
             item.setZValue(3)
             item.setFlags(QtGui.QGraphicsItem.ItemIsMovable)
-
+            item.setToolTip(item.block.get_out())
             self.block_list.append(item)
             print 'Add to form ', BlockClass
 
@@ -225,12 +230,20 @@ class MyMainWindow(QtGui.QMainWindow):
 
     def draw_line(self):
         """ Рисует линию между двумя блоками """
+        self.mode = 'draw_line_mode'
         cursor = QtGui.QCursor(QtGui.QPixmap('images/draw_line.png'))
         self.view.setCursor(cursor)
+
+    def set_normal_mode(self):
+        self.mode = 'normal'
+        cursor = QtGui.QCursor(QtCore.Qt.ArrowCursor)
+        self.view.setCursor(cursor)
+        print '%s mode set' % self.mode
 
 
 class IBlock(QtGui.QGraphicsPixmapItem):
     def __init__(self, pixmap, parent = None, scene = None):
+        self.parent = parent
         QtGui.QGraphicsPixmapItem.__init__(self, pixmap, parent, scene)
 
     def mousePressEvent(self, event):
@@ -239,75 +252,51 @@ class IBlock(QtGui.QGraphicsPixmapItem):
             return
         print 'You pressed ', self.block
 
+    def mouseDoubleClickEvent(self, event):
+        if event.button() != QtCore.Qt.LeftButton: # только левая клавиша мыши
+            event.ignore()
+            return
+        property_window = prop.Property(MainWindow)
+        property_window.setupUi(self.block)
+        property_window.show()
+        print 'You doubleClecked ', self.block
 
-## class Scene(QtGui.QGraphicsScene):
-##     def __init__(self, parent = None):
-##         QtGui.QGraphicsScene.__init__(self, parent)
+class Scene(QtGui.QGraphicsScene):
+    def __init__(self, parent = None):
+        QtGui.QGraphicsScene.__init__(self, parent)
 
-##     # операция drag and drop входит в область сцены
-##     def dragEnterEvent(self, event):
-##         item = event.mimeData().IBlock
-##         # временный "затемнённый" рисунок перетаскиваемой картинки:
-##         tempPixmap = QtGui.QPixmap(item.pixmap())
-##         ## painter = QtGui.QPainter()
-##         ## painter.begin(tempPixmap)
-##         ## painter.fillRect(item.pixmap().rect(), QtGui.QColor(127, 127, 127, 127))
-##         ## painter.end()
-##         item.setPixmap(tempPixmap)
+    ## def mousePressEvent(self, e):
+    ##     self.add_line(e.x(), e.y())
+    ##     self.update()
 
-##     ## # операция drag and drop покидает область сцены
-##     ## def dragLeaveEvent(self, event):
-##     ##     item = event.mimeData().IBlock
-##     ##     # восстанавливаем рисунок перетаскиваемой картинки:
-##     ##     pixmap = QtGui.QPixmap(event.mimeData().imageData())
-##     ##     item.setPixmap(pixmap)
+    def add_line(self, x, y):
+        line = Line(x, y)
 
-##     # в процессе выполнения операции drag and drop
-##     def dragMoveEvent(self, event):
-##         pass
+class Line(QtCore.QLineF):
+    def __init__(self, start, stop):
+        QtCore.QLineF.__init__(self)
+        self.color = QtCore.Qt.black
+        self.path = QtGui.QPainterPath()
+        self.path.moveTo(self)
+        self.start = start
+        self.stop = stop
 
-##     # завершение операции drag and drop
-##     def dropEvent(self, event):
-##         # создание копии перенесённого элемента на новом месте:
-##         pixmap = QtGui.QPixmap(event.mimeData().imageData())
-##         item = IBlock(pixmap, None, self)
-##         # установка положения элемента,
-##         # координаты курсора мыши на сцене корректируем координатами курсора мыши на элементе:
-##         item.setPos(event.scenePos() - event.mimeData().Pos)
-##         # удаление перенесённого элемента:
-##         self.removeItem(event.mimeData().IBlock)
+    def paint(self, painter):
+        """ внешний вид """
+        painter.setPen(QtGui.QPen(self.color, 1))
+        painter.drawLine(self, QtCore.QPointF(self.x() + 15, self.y() + 15))
 
+    def clearPath(self):
+        """очистить шлейф"""
+        self.path = QtGui.QPainterPath()
+        self.path.moveTo(self)
 
-## class IBlock(QtGui.QGraphicsPixmapItem):
-##     def __init__(self, pixmap, parent = None, scene = None):
-##         QtGui.QGraphicsPixmapItem.__init__(self, pixmap, parent, scene)
-##         self.setTransformationMode(QtCore.Qt.SmoothTransformation) # качество прорисовки
-
-##     def mousePressEvent(self, event):
-##         if event.button() != QtCore.Qt.LeftButton: # только левая клавиша мыши
-##             event.ignore()
-##             return
-##         drag = QtGui.QDrag(event.widget()) # объект Drag
-##         mime = QtCore.QMimeData()
-##         mime.setImageData(QtCore.QVariant(self.pixmap())) # запоминаем рисунок
-##         mime.Pos = event.pos() # запоминаем позицию события в координатах элемента
-##         mime.z = self.zValue() # запоминаем z-позицию рисунка
-##         mime.IBlock = self # запоминаем сам элемент, который переносится
-##         # примечание: предыдущие три "запоминания" можно реализовать
-##         # и с помощью более "понятного" mime.setData(),
-##         # особенно, если нужно передавать данные не только в пределах одного приложения
-##         # (тогда использование mime.setData() будет даже предпочтительнее)
-##         drag.setMimeData(mime)
-
-##         drag.setPixmap(self.pixmap()) # рисунок, отображающийся в процессе переноса
-##         drag.setHotSpot(event.pos().toPoint()) # позиция "ухватки"
-
-##         drag.start() # запуск (начало) перетаскивания
 
 
 def init():
     app = QtGui.QApplication(sys.argv)
     # создаем отдельный, независимый объект окна...
+    global MainWindow
     MainWindow = QtGui.QMainWindow()
     # ...и прогоняем его через наш класс
     form = MyMainWindow()
