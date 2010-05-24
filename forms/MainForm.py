@@ -51,6 +51,7 @@ class MyMainWindow(QtGui.QMainWindow):
         # draw - line
         act_draw_line = QtGui.QAction(QtGui.QIcon('images/draw_line.png'),
                                  u'Установить связь', self.main)
+        act_draw_line.setCheckable(True)
         act_draw_line.setStatusTip(u'Установить связь между блоками')
         MainWindow.connect(act_draw_line, QtCore.SIGNAL('triggered()'),
                            self.draw_line)
@@ -221,20 +222,23 @@ class MyMainWindow(QtGui.QMainWindow):
             self.scene.removeItem(self.background)
             self.background = self.scene.addPixmap(QtGui.QPixmap(img))
             self.background.setFlags(QtGui.QGraphicsItem.ItemIsMovable)
+            self.background.setZValue(-1000.0)
             print 'Background add to form ', img
 
     def draw_line(self):
         """ Рисует линию между двумя блоками """
         if self.mode == 'normal':
-            self.mode = 'draw_line_mode'
+            self.mode = 'draw_line'
+            self.scene.mode = 'draw_line'
             print '%s mode set' % self.mode.capitalize()
             cursor = QtGui.QCursor(QtGui.QPixmap('images/draw_line.png'))
             self.view.setCursor(cursor)
-        elif self.mode == 'draw_line_mode':
+        elif self.mode == 'draw_line':
             self.set_normal_mode()
 
     def set_normal_mode(self):
         self.mode = 'normal'
+        self.scene.mode = 'normal'
         cursor = QtGui.QCursor(QtCore.Qt.ArrowCursor)
         self.view.setCursor(cursor)
         print '%s mode set' % self.mode.capitalize()
@@ -250,6 +254,8 @@ class IBlock(QtGui.QGraphicsPixmapItem):
             event.ignore()
             return
         print 'You pressed ', self.block
+        ## if scene.mode == 'draw_line':
+        ##     line = QGui.QGraphicsLineItem(QtCore.QLineF(
 
     def mouseDoubleClickEvent(self, event):
         if event.button() != QtCore.Qt.LeftButton: # только левая клавиша мыши
@@ -263,15 +269,47 @@ class IBlock(QtGui.QGraphicsPixmapItem):
 class Scene(QtGui.QGraphicsScene):
     def __init__(self, parent = None):
         QtGui.QGraphicsScene.__init__(self, parent)
+        self.mode = 'normal'
 
-    ## def mousePressEvent(self, e):
-    ##     self.add_line(e.x(), e.y())
-    ##     self.update()
+    def mousePressEvent(self, event):
+        if self.mode == 'draw_line':
+            if event.button() != QtCore.Qt.LeftButton: # только левая клавиша мыши
+                event.ignore()
+                return
+            self.line = QtGui.QGraphicsLineItem(QtCore.QLineF(event.scenePos(),
+                                                         event.scenePos()))
+            self.line.setPen(QtGui.QPen(QtCore.Qt.black, 2))
+            self.addItem(self.line)
+            #self.update()
+        else:
+            QtGui.QGraphicsScene.mousePressEvent(self, event)
+
+    def mouseMoveEvent(self, event):
+        if self.mode == 'draw_line' and self.line:
+            new_line = QtCore.QLineF(self.line.line().p1(), event.scenePos())
+            self.line.setLine(new_line)
+        else:
+            QtGui.QGraphicsScene.mousePressEvent(self, event)
+
+    def mouseReliseEvent(self, event):
+        if self.line and self.mode == 'draw_line':
+            startItems = self.QGraphicsItem.items(self.line.line().p1())
+            if startItems.count() and startItems.first() == self.line:
+                startItems.removeFirst()
+
+            endItems = self.QGraphicsItem.items(self.line.line().p2())
+        if (startItems.count() > 0 and endItems.first() == self.line):
+            endItems.removeFirst()
+
+        self.removeItem(self.line)
+
+        ## if (startItems.count() > 0 and endItems.count() >0 and
+        ##     startItems.first().type() == 
 
     def add_line(self, x, y):
         line = Line(x, y)
 
-class Line(QtCore.QLineF):
+class Line(QtGui.QGraphicsLineItem):
     def __init__(self, start, stop):
         QtCore.QLineF.__init__(self)
         self.color = QtCore.Qt.black
