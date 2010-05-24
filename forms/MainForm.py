@@ -7,8 +7,6 @@ import about
 import prop
 import flowlayout as flow
 
-## def ViewMousePressEvent(obj):
-##     obj.set_normal_mode(obj)
 
 class MyMainWindow(QtGui.QMainWindow):
     def __init__(self, parent=None):
@@ -22,8 +20,6 @@ class MyMainWindow(QtGui.QMainWindow):
 
         self.main = MainWindow
 
-        # scene
-        #self.scene = QtGui.QGraphicsScene()
 
         self.scene = Scene()
         # graphics
@@ -31,9 +27,8 @@ class MyMainWindow(QtGui.QMainWindow):
         # параметры качества прорисовки для виджета представления:
         self.view.setRenderHints(QtGui.QPainter.Antialiasing |
                                  QtGui.QPainter.SmoothPixmapTransform)
-        ## self.view.mousePressEvent = ViewMousePressEvent
 
-        self.background = self.scene.addPixmap(QtGui.QPixmap("")) # без фона, пока
+        self.background = self.scene.addPixmap(QtGui.QPixmap("")) # без фона
 
         MainWindow.setCentralWidget(self.view)
 
@@ -129,7 +124,7 @@ class MyMainWindow(QtGui.QMainWindow):
         self.menuFile.addAction(act_save_as)
         self.menuFile.addAction(act_exit)
 
-        ## self.menuEdit.addAction(act_help)
+        ## self.menuEdit.addAction(act_bgr_img)
 
         self.menuTools.addAction(act_plugins)
         self.menuTools.addAction(act_console)
@@ -230,15 +225,19 @@ class MyMainWindow(QtGui.QMainWindow):
 
     def draw_line(self):
         """ Рисует линию между двумя блоками """
-        self.mode = 'draw_line_mode'
-        cursor = QtGui.QCursor(QtGui.QPixmap('images/draw_line.png'))
-        self.view.setCursor(cursor)
+        if self.mode == 'normal':
+            self.mode = 'draw_line_mode'
+            print '%s mode set' % self.mode.capitalize()
+            cursor = QtGui.QCursor(QtGui.QPixmap('images/draw_line.png'))
+            self.view.setCursor(cursor)
+        elif self.mode == 'draw_line_mode':
+            self.set_normal_mode()
 
     def set_normal_mode(self):
         self.mode = 'normal'
         cursor = QtGui.QCursor(QtCore.Qt.ArrowCursor)
         self.view.setCursor(cursor)
-        print '%s mode set' % self.mode
+        print '%s mode set' % self.mode.capitalize()
 
 
 class IBlock(QtGui.QGraphicsPixmapItem):
@@ -292,13 +291,10 @@ class Line(QtCore.QLineF):
         self.path.moveTo(self)
 
 
-
 def init():
     app = QtGui.QApplication(sys.argv)
-    # создаем отдельный, независимый объект окна...
     global MainWindow
     MainWindow = QtGui.QMainWindow()
-    # ...и прогоняем его через наш класс
     form = MyMainWindow()
     form.setupUi(MainWindow)
     return app, form, MainWindow

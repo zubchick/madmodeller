@@ -10,8 +10,9 @@ from base import Block
 
 class Splitter(Block):
     """ Разветвитель """
-    def __init__(self, k=1):
+    def __init__(self, out=2):
         Block.__init__(self)
+        self.out = out
 
     name = u"Splitter"
     doc = u'Разделяет сигнал на несколько одинаковых'
