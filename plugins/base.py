@@ -14,24 +14,29 @@ class Block(object):
         self.out_signals = {} # number:value = номер входа/выхода:значение
         self.type = ''
         self.defaults = {}
+        # Все свойства, которым можно изменить через форму,
+        # которая появляется по двойному клику на блоке,
+        # должны иметь префикс "change".
+        # Пример:
+        # self.changeTestValue = 666 # будет отображаться как TestValue
 
     name = u"Anonimus" # Отображаемое имя блока
     doc = u'Если вы видите эту надпись, значит у блока нет doc-строки'
-    image = "images/blocks/default_block.png"
+    image = "images/blocks/default_block.png" # картинка блока
 
-    def get_out(self):
+    def _get_out(self):
         """ Возвращает информацию о исходящих значениях
-        в текстовом виде """
+        в текстовом виде. """
         string = u'<b>%s</b>\n' % self.name
         for key, value in self.out_signals.items():
             string += u'<b>{0}:</b> {1}\n'.format(key, value)
         return string
 
-    def get_params(self):
+    def _get_params(self):
         """ Возвращает список параметров, которые можно менять в блоке """
-        base = Block()
-        base_key_list = [key for key in base.__dict__]
-        ret_key_list =  [key for key in self.__dict__ if key not in base_key_list]
+        base_key_list = [key for key in Block().__dict__]
+        ret_key_list =  [key for key in self.__dict__ if (key not in base_key_list
+                                                          and key.startswith('change'))]
         ret_value_list = [self.__dict__[key] for key in ret_key_list]
         return dict(zip(ret_key_list, ret_value_list))
 

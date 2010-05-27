@@ -12,13 +12,13 @@ class MyMainWindow(QtGui.QMainWindow):
     def __init__(self, parent=None):
         QtGui.QMainWindow.__init__(self, parent)
 
-    def setupUi(self, MainWindow):
-        MainWindow.setWindowTitle(u'MadModeller')
-        MainWindow.resize(600, 450)
+    def setupUi(self, MainWindow_):
+        MainWindow_.setWindowTitle(u'MadModeller')
+        MainWindow_.resize(800, 600)
 
         self.block_list = [] # список для блоков на экране
 
-        self.main = MainWindow
+        self.main = MainWindow_
 
 
         self.scene = Scene()
@@ -30,9 +30,9 @@ class MyMainWindow(QtGui.QMainWindow):
 
         self.background = self.scene.addPixmap(QtGui.QPixmap("")) # без фона
 
-        MainWindow.setCentralWidget(self.view)
+        MainWindow_.setCentralWidget(self.view)
 
-        self.menubar = QtGui.QMenuBar(MainWindow)
+        self.menubar = QtGui.QMenuBar(MainWindow_)
 
         self.menuFile = QtGui.QMenu(self.menubar)
         self.menuFile = self.menubar.addMenu(u'&Файл')
@@ -43,7 +43,7 @@ class MyMainWindow(QtGui.QMainWindow):
         self.menuHelp = QtGui.QMenu(self.menubar)
         self.menuHelp = self.menubar.addMenu(u'&Справка')
 
-        MainWindow.setMenuBar(self.menubar)
+        MainWindow_.setMenuBar(self.menubar)
 
         # mode - состояние программы
         self.mode = 'normal'
@@ -53,14 +53,14 @@ class MyMainWindow(QtGui.QMainWindow):
                                  u'Установить связь', self.main)
         act_draw_line.setCheckable(True)
         act_draw_line.setStatusTip(u'Установить связь между блоками')
-        MainWindow.connect(act_draw_line, QtCore.SIGNAL('triggered()'),
+        MainWindow_.connect(act_draw_line, QtCore.SIGNAL('triggered()'),
                            self.draw_line)
 
         # background-image
         act_bgr_img = QtGui.QAction(QtGui.QIcon('images/background.png'),
                                  u'Установить фон', self.main)
         act_bgr_img.setStatusTip(u'Устанофить фон для рабочей области')
-        MainWindow.connect(act_bgr_img, QtCore.SIGNAL('triggered()'),
+        MainWindow_.connect(act_bgr_img, QtCore.SIGNAL('triggered()'),
                            self.add_background)
 
         # open
@@ -86,7 +86,7 @@ class MyMainWindow(QtGui.QMainWindow):
                                  u'Выход', self.main)
         act_exit.setShortcut('Ctrl+Q')
         act_exit.setStatusTip(u'Выйти из приложения')
-        MainWindow.connect(act_exit, QtCore.SIGNAL('triggered()'),
+        MainWindow_.connect(act_exit, QtCore.SIGNAL('triggered()'),
                      QtCore.SLOT('close()'))
 
         # plugin manager
@@ -117,7 +117,7 @@ class MyMainWindow(QtGui.QMainWindow):
         act_about = QtGui.QAction(QtGui.QIcon('images/about.png'),
                                  u'О программе', self.main)
         act_about.setStatusTip(u'О программе')
-        MainWindow.connect(act_about, QtCore.SIGNAL('triggered()'),
+        MainWindow_.connect(act_about, QtCore.SIGNAL('triggered()'),
                            self.showAboutWindow)
 
         self.menuFile.addAction(act_open)
@@ -139,7 +139,7 @@ class MyMainWindow(QtGui.QMainWindow):
         self.menubar.addAction(self.menuTools.menuAction())
         self.menubar.addAction(self.menuHelp.menuAction())
 
-        toolbar = QtGui.QToolBar(MainWindow)
+        toolbar = QtGui.QToolBar(MainWindow_)
         toolbar.addAction(act_open)
         toolbar.addAction(act_save)
         toolbar.addAction(act_save_as)
@@ -150,12 +150,12 @@ class MyMainWindow(QtGui.QMainWindow):
         toolbar.addAction(act_exit)
 
         toolbar.setWindowTitle(u'Панель инструментов')
-        MainWindow.addToolBar(toolbar)
+        MainWindow_.addToolBar(toolbar)
 
-        self.statusbar = QtGui.QStatusBar(MainWindow)
-        MainWindow.setStatusBar(self.statusbar)
+        self.statusbar = QtGui.QStatusBar(MainWindow_)
+        MainWindow_.setStatusBar(self.statusbar)
 
-        self.dockWidget = QtGui.QDockWidget(MainWindow)
+        self.dockWidget = QtGui.QDockWidget(MainWindow_)
         self.dockWidgetContents = QtGui.QWidget()
         self.dockWidget.setWindowTitle(u'Блоки')
         self.dockWidget.setMinimumSize(180, 50)
@@ -164,7 +164,7 @@ class MyMainWindow(QtGui.QMainWindow):
         self.dockWidgetContents.setLayout(self.flowlayout)
 
         self.dockWidget.setWidget(self.dockWidgetContents)
-        MainWindow.addDockWidget(QtCore.Qt.DockWidgetArea(1), self.dockWidget)
+        MainWindow_.addDockWidget(QtCore.Qt.DockWidgetArea(1), self.dockWidget)
 
 
     def showAboutWindow(self):
@@ -210,7 +210,7 @@ class MyMainWindow(QtGui.QMainWindow):
             item.block.index = hash(str(item.block))
             item.setZValue(3)
             item.setFlags(QtGui.QGraphicsItem.ItemIsMovable)
-            item.setToolTip(item.block.get_out())
+            item.setToolTip(item.block._get_out())
             self.block_list.append(item)
             print 'Add to form ', BlockClass
 

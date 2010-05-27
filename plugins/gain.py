@@ -12,6 +12,8 @@ class Gain(Block):
     def __init__(self, k=1):
         Block.__init__(self)
         self.k = k
+        self.out = 5
+        self.changeTest = 123
         self.inputs = [None] # обозначаем что вход 1н
         self.outputs = [None] # обозначаем что выход 1н
         self.inp_signals = {0:None}
