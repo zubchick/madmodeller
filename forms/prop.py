@@ -10,7 +10,7 @@ class Property(QtGui.QWidget):
         self.setWindowFlags(QtCore.Qt.Window)
 
     def setupUi(self, block_obj):
-        params = block_obj._get_params()
+        self.params = block_obj._get_params()
         self.setGeometry(300, 300, 250, 150)
         self.setWindowModality(QtCore.Qt.WindowModal)
         layout = QtGui.QVBoxLayout(self)
@@ -22,7 +22,7 @@ class Property(QtGui.QWidget):
         self.connect(self.button_ok, QtCore.SIGNAL('clicked()'),
                      lambda val = block_obj: self.set_new_params(val))
 
-        if params:
+        if self.params:
             self.setWindowTitle(u'Свойства блока {0}'.format(block_obj.name))
 
             self.form_dict = {}
@@ -40,8 +40,18 @@ class Property(QtGui.QWidget):
             layout.addWidget(self.button_cancel)
 
     def set_new_params(self, block_obj):
+        font = QtGui.QFont()
+        bold_font = QtGui.QFont()
+        bold_font.setBold(True)
+        for line in self.form_dict.values():
+            line.setFont(font)
         for key, value in self.form_dict.items():
-            val = float(value.text())
-            setattr(block_obj, key, val)
-        print '{0} new parameters'.format(block_obj)
-        self.close()
+            try:
+                val = type(self.params[key])(value.text()) # тип параметра, который был до изменения
+                setattr(block_obj, key, val)
+                print '{0} new parameters'.format(block_obj)
+                self.close()
+            except ValueError:
+                self.form_dict[key].setFont(bold_font)
+                print 'Bad value ', value.text()
+
