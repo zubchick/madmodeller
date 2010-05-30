@@ -16,6 +16,7 @@ class Property(QtGui.QWidget):
         layout = QtGui.QVBoxLayout(self)
 
         self.button_ok = QtGui.QPushButton(u'Ок')
+        self.button_ok.setFocus()
         self.button_cancel = QtGui.QPushButton(u'Отмена')
         self.connect(self.button_cancel, QtCore.SIGNAL('clicked()'),
                      QtCore.SLOT('close()'))

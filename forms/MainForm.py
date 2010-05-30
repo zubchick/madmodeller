@@ -4,13 +4,31 @@
 from PyQt4 import QtGui, QtCore
 import sys
 import about
+import logger
 import prop
 import flowlayout as flow
+
+
+## class Logger(object):
+##     def __init__(self, output):
+##         self.output = output
+
+##     def write(self, string):
+##         if not (string == "\n"):
+##             trstring = QtGui.QApplication.translate("MainWindow", string.strip(),
+##                                                     None, QtGui.QApplication.UnicodeUTF8)
+##             self.output.append(trstring)
 
 
 class MyMainWindow(QtGui.QMainWindow):
     def __init__(self, parent=None):
         QtGui.QMainWindow.__init__(self, parent)
+        self.log = QtGui.QTextEdit()
+        self.log.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOn)
+        self.log.append("Log started")
+        # вывод в консоль ctr-C
+        ## sys.stdout = Logger(self.log)
+        ## sys.stderr = Logger(self.log)
 
     def setupUi(self, MainWindow_):
         MainWindow_.setWindowTitle(u'MadModeller')
@@ -22,6 +40,8 @@ class MyMainWindow(QtGui.QMainWindow):
 
 
         self.scene = Scene()
+        self.scene.setSceneRect(QtCore.QRectF(0, 0, 5000, 5000))
+        self.scene.itemInserted.connect(self.itemInserted)
         # graphics
         self.view = QtGui.QGraphicsView(self.scene, self.main)
         # параметры качества прорисовки для виджета представления:
@@ -100,6 +120,8 @@ class MyMainWindow(QtGui.QMainWindow):
                                  u'Консоль', self.main)
         act_console.setShortcut('Ctrl+C')
         act_console.setStatusTip(u'Консоль отладки')
+        MainWindow_.connect(act_console, QtCore.SIGNAL('triggered()'),
+                           self.show_console)
 
         # run
         act_run = QtGui.QAction(QtGui.QIcon('images/run.png'),
@@ -158,7 +180,7 @@ class MyMainWindow(QtGui.QMainWindow):
         self.dockWidget = QtGui.QDockWidget(MainWindow_)
         self.dockWidgetContents = QtGui.QWidget()
         self.dockWidget.setWindowTitle(u'Блоки')
-        self.dockWidget.setMinimumSize(180, 50)
+        self.dockWidget.setMinimumSize(215, 10)
 
         self.flowlayout = flow.FlowLayout()
         self.dockWidgetContents.setLayout(self.flowlayout)
@@ -166,14 +188,29 @@ class MyMainWindow(QtGui.QMainWindow):
         self.dockWidget.setWidget(self.dockWidgetContents)
         MainWindow_.addDockWidget(QtCore.Qt.DockWidgetArea(1), self.dockWidget)
 
+    def itemInserted(self, item):
+        self.blocks_button[item.block.name].setChecked(False)
+        self.set_cursor()
+
+    def show_console(self):
+        print 'console'
+        log_form, log_window = logger.init(self.main, self.log)
+        log_window.show()
+        ## console = myQThread() # До лучших времен
+        ## console.run()
+
+    ## @QtCore.pyqtSignature("")
+    ## def threadFinished(self):
+    ##     print 'Thread finished'
 
     def showAboutWindow(self):
+        print 'About window'
         about_form, about_window = about.init(self.main)
         about_window.show()
 
     def set_blocks(self, block_dict):
         """ рисует кнопочки-блоки """
-        self.blocks = {}
+        self.blocks_button = {}
         for key, value in block_dict.items():
             ## print key, value
             iBlock = QtGui.QWidget()
@@ -186,17 +223,18 @@ class MyMainWindow(QtGui.QMainWindow):
             font.setPointSize(7)
             label.setFont(font)
 
-            button = QtGui.QPushButton()
+            button = QtGui.QToolButton()
             button.setIcon(QtGui.QIcon(value.image))
             button.setIconSize(QtCore.QSize(30, 30))
             button.setStatusTip(value.doc)
+            button.setCheckable(True)
 
             layout.addWidget(button, 0, 1, 1, 1)
             layout.addWidget(label, 1, 0, 1, 3)
             self.connect(button, QtCore.SIGNAL("clicked()"),
                          lambda val=value: self.add_block(val))
             ## button.clicked.connect(lambda : self.add_block(value))
-            self.blocks[key] = button
+            self.blocks_button[key] = button
             self.flowlayout.addWidget(iBlock)
 
     def add_block(self, BlockClass):
@@ -205,14 +243,16 @@ class MyMainWindow(QtGui.QMainWindow):
         ## item.setFlags(QtGui.QGraphicsItem.ItemIsMovable)
         ## item.setZValue(3)
         if self.mode == 'normal':
-            item = IBlock(QtGui.QPixmap(BlockClass.image), None, self.scene)
+            item = IBlock(QtGui.QPixmap(BlockClass.image))
             item.block = BlockClass()
             item.block.index = hash(str(item.block))
             item.setZValue(3)
-            item.setFlags(QtGui.QGraphicsItem.ItemIsMovable)
             item.setToolTip(item.block._get_out())
+            self.scene.current = item
+            self.scene.set_mode('insert')
+            self.set_cursor(BlockClass.image)
             self.block_list.append(item)
-            print 'Add to form ', BlockClass
+            self.blocks_button[BlockClass.name].setChecked(True)
 
     def add_background(self):
         """ Добавить фоновую картинку на рабочее поле """
@@ -225,62 +265,123 @@ class MyMainWindow(QtGui.QMainWindow):
             self.background.setZValue(-1000.0)
             print 'Background add to form ', img
 
+    def set_cursor(self, pic=None):
+        """ Устанавливает вид курсора """
+        if pic == None:
+            self.view.setCursor(QtGui.QCursor(QtCore.Qt.ArrowCursor))
+        else:
+            self.view.setCursor(QtGui.QCursor(QtGui.QPixmap(pic)))
+
     def draw_line(self):
         """ Рисует линию между двумя блоками """
         if self.mode == 'normal':
             self.mode = 'draw_line'
             self.scene.mode = 'draw_line'
             print '%s mode set' % self.mode.capitalize()
-            cursor = QtGui.QCursor(QtGui.QPixmap('images/draw_line.png'))
-            self.view.setCursor(cursor)
+            self.set_cursor('images/draw_line.png')
+            ## cursor = QtGui.QCursor(QtGui.QPixmap('images/draw_line.png'))
+            ## self.main.setCursor(cursor)
         elif self.mode == 'draw_line':
             self.set_normal_mode()
 
     def set_normal_mode(self):
         self.mode = 'normal'
         self.scene.mode = 'normal'
-        cursor = QtGui.QCursor(QtCore.Qt.ArrowCursor)
-        self.view.setCursor(cursor)
+        self.set_cursor()
+        ## cursor = QtGui.QCursor(QtCore.Qt.ArrowCursor)
+        ## self.main.setCursor(cursor)
         print '%s mode set' % self.mode.capitalize()
 
 
-class IBlock(QtGui.QGraphicsPixmapItem):
-    def __init__(self, pixmap, parent = None, scene = None):
-        self.parent = parent
-        QtGui.QGraphicsPixmapItem.__init__(self, pixmap, parent, scene)
+## class myQThread(QtCore.QThread):
+##     def run(self):
+##         from IPython.Shell import IPShellEmbed
+##         IPShellEmbed()()
 
-    def mousePressEvent(self, event):
-        if event.button() != QtCore.Qt.LeftButton: # только левая клавиша мыши
-            event.ignore()
-            return
-        print 'You pressed ', self.block
-        ## if scene.mode == 'draw_line':
-        ##     line = QGui.QGraphicsLineItem(QtCore.QLineF(
+
+class IBlock(QtGui.QGraphicsPixmapItem):
+    def __init__(self, pixmap, parent = None, contextMenu = None):
+        self.parent = parent
+        QtGui.QGraphicsPixmapItem.__init__(self, pixmap, parent)
+        self.arrows = []
+        self.setFlag(QtGui.QGraphicsItem.ItemIsSelectable, True)
+        self.setFlag(QtGui.QGraphicsItem.ItemIsMovable, True)
+
+    ## def mousePressEvent(self, event):
+    ##     if event.button() != QtCore.Qt.LeftButton: # только левая клавиша мыши
+    ##         event.ignore()
+    ##         return
+    ##     print 'You pressed ', self.block
+    ##     ## if scene.mode == 'draw_line':
+    ##     ##     line = QGui.QGraphicsLineItem(QtCore.QLineF(
 
     def mouseDoubleClickEvent(self, event):
         if event.button() != QtCore.Qt.LeftButton: # только левая клавиша мыши
             event.ignore()
             return
-        property_window = prop.Property(MainWindow)
+        property_window = prop.Property(MainWindow) # этот грязный хак, надо убрать
         property_window.setupUi(self.block)
         property_window.show()
         print 'You doubleClecked ', self.block
 
+    def removeArrow(self, arrow):
+        try:
+            self.arrows.remove(arrow)
+        except ValueError:
+            pass
+
+    def removeArrows(self):
+        for arrow in self.arrows[:]:
+            arrow.startItem().removeArrow(arrow)
+            arrow.endItem().removeArrow(arrow)
+            self.scene().removeItem(arrow)
+
+    def addArrow(self, arrow):
+        self.arrows.append(arrow)
+
+    def itemChange(self, change, value):
+        if change == QtGui.QGraphicsItem.ItemPositionChange:
+            for arrow in self.arrows:
+                arrow.updatePosition()
+
+        return value
+
+    def contextMenuEvent(self, event):
+        self.scene().clearSelection()
+        self.setSelected(True)
+        self.myContextMenu.exec_(event.screenPos())
+
+
 class Scene(QtGui.QGraphicsScene):
+    itemInserted = QtCore.pyqtSignal(IBlock)
+
+    itemSelected = QtCore.pyqtSignal(QtGui.QGraphicsItem)
+
     def __init__(self, parent = None):
         QtGui.QGraphicsScene.__init__(self, parent)
         self.mode = 'normal'
+
+    def set_mode(self, mode):
+        self.mode = mode
 
     def mousePressEvent(self, event):
         if self.mode == 'draw_line':
             if event.button() != QtCore.Qt.LeftButton: # только левая клавиша мыши
                 event.ignore()
                 return
+
+
             self.line = QtGui.QGraphicsLineItem(QtCore.QLineF(event.scenePos(),
                                                          event.scenePos()))
             self.line.setPen(QtGui.QPen(QtCore.Qt.black, 2))
             self.addItem(self.line)
             #self.update()
+        elif self.mode == 'insert':
+            print 'Add to form ', self.current.block
+            self.addItem(self.current)
+            self.current.setPos(event.scenePos())
+            self.set_mode('normal')
+            self.itemInserted.emit(self.current)
         else:
             QtGui.QGraphicsScene.mousePressEvent(self, event)
 
@@ -298,13 +399,13 @@ class Scene(QtGui.QGraphicsScene):
                 startItems.removeFirst()
 
             endItems = self.QGraphicsItem.items(self.line.line().p2())
-        if (startItems.count() > 0 and endItems.first() == self.line):
+        if (endItems.count() and endItems.first() == self.line):
             endItems.removeFirst()
 
         self.removeItem(self.line)
 
         ## if (startItems.count() > 0 and endItems.count() >0 and
-        ##     startItems.first().type() == 
+        ##     startItems.first().type() ==
 
     def add_line(self, x, y):
         line = Line(x, y)
@@ -337,7 +438,7 @@ def init():
     form.setupUi(MainWindow)
     return app, form, MainWindow
 
-if __name__ == '__main__':
-    app, mainForm, window = init()
-    window.show()
-    sys.exit(app.exec_())
+## if __name__ == '__main__':
+##     app, mainForm, window = init()
+##     window.show()
+##     sys.exit(app.exec_())
