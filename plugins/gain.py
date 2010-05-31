@@ -9,9 +9,9 @@ from base import Block
 
 class Gain(Block):
     """ Усилитель """
-    def __init__(self, k=1):
+    def __init__(self, k=1.0):
         Block.__init__(self)
-        self.k = k
+        self.changek = k
         self.out = 5
         self.changeTest = 123
         self.inputs = [None] # обозначаем что вход 1н

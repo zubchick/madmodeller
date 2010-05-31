@@ -21,6 +21,7 @@ import flowlayout as flow
 
 
 class MyMainWindow(QtGui.QMainWindow):
+    """ Главное окно программы """
     def __init__(self, parent=None):
         QtGui.QMainWindow.__init__(self, parent)
         self.log = QtGui.QTextEdit()
@@ -40,10 +41,11 @@ class MyMainWindow(QtGui.QMainWindow):
 
 
         self.scene = Scene()
-        self.scene.setSceneRect(QtCore.QRectF(0, 0, 5000, 5000))
+        self.scene.setSceneRect(QtCore.QRectF(0, 0, 500, 500))
         self.scene.itemInserted.connect(self.itemInserted)
         # graphics
         self.view = QtGui.QGraphicsView(self.scene, self.main)
+
         # параметры качества прорисовки для виджета представления:
         self.view.setRenderHints(QtGui.QPainter.Antialiasing |
                                  QtGui.QPainter.SmoothPixmapTransform)
@@ -72,6 +74,7 @@ class MyMainWindow(QtGui.QMainWindow):
         act_draw_line = QtGui.QAction(QtGui.QIcon('images/draw_line.png'),
                                  u'Установить связь', self.main)
         act_draw_line.setCheckable(True)
+        act_draw_line.setShortcut('Space')
         act_draw_line.setStatusTip(u'Установить связь между блоками')
         MainWindow_.connect(act_draw_line, QtCore.SIGNAL('triggered()'),
                            self.draw_line)
@@ -178,14 +181,23 @@ class MyMainWindow(QtGui.QMainWindow):
         MainWindow_.setStatusBar(self.statusbar)
 
         self.dockWidget = QtGui.QDockWidget(MainWindow_)
-        self.dockWidgetContents = QtGui.QWidget()
         self.dockWidget.setWindowTitle(u'Блоки')
-        self.dockWidget.setMinimumSize(215, 10)
+        self.dockWidget.setMinimumSize(200, 10)
+
+        doc_contents = QtGui.QWidget()
+        layout_main = QtGui.QVBoxLayout(self)
+        doc_contents.setLayout(layout_main)
+        self.scroll_area = QtGui.QScrollArea()
+        ## self.scroll_area.setBackgroundRole(QtGui.QPalette.Dark)
+        layout_main.addWidget(self.scroll_area)
+        self.scroll_widget = QtGui.QWidget()
 
         self.flowlayout = flow.FlowLayout()
-        self.dockWidgetContents.setLayout(self.flowlayout)
+        self.scroll_widget.setLayout(self.flowlayout)
+        self.scroll_area.setWidget(self.scroll_widget)
+        self.scroll_area.setWidgetResizable(True)
 
-        self.dockWidget.setWidget(self.dockWidgetContents)
+        self.dockWidget.setWidget(doc_contents)
         MainWindow_.addDockWidget(QtCore.Qt.DockWidgetArea(1), self.dockWidget)
 
     def itemInserted(self, item):
@@ -209,10 +221,9 @@ class MyMainWindow(QtGui.QMainWindow):
         about_window.show()
 
     def set_blocks(self, block_dict):
-        """ рисует кнопочки-блоки """
+        """ рисует кнопочки-блоки в Doc'е """
         self.blocks_button = {}
         for key, value in block_dict.items():
-            ## print key, value
             iBlock = QtGui.QWidget()
 
             layout = QtGui.QGridLayout(iBlock)
@@ -233,7 +244,6 @@ class MyMainWindow(QtGui.QMainWindow):
             layout.addWidget(label, 1, 0, 1, 3)
             self.connect(button, QtCore.SIGNAL("clicked()"),
                          lambda val=value: self.add_block(val))
-            ## button.clicked.connect(lambda : self.add_block(value))
             self.blocks_button[key] = button
             self.flowlayout.addWidget(iBlock)
 
@@ -252,6 +262,10 @@ class MyMainWindow(QtGui.QMainWindow):
             self.scene.set_mode('insert')
             self.set_cursor(BlockClass.image)
             self.block_list.append(item)
+            # убираем выделение с остальных кнопочек
+            for button in self.blocks_button.values():
+                button.setChecked(False)
+            # и устанавливаем на нужной
             self.blocks_button[BlockClass.name].setChecked(True)
 
     def add_background(self):
