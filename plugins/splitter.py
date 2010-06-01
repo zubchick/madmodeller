@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 ## autor: Зубков Никита Владимирович
@@ -12,7 +11,16 @@ class Splitter(Block):
     """ Разветвитель """
     def __init__(self, out=2):
         Block.__init__(self)
-        self.out = out
+        self._changeOut = out
+
+    @property
+    def changeOut(self):
+        return self._changeOut
+
+    @changeOut.setter
+    def changeOut(self, value):
+        if value >= 1:
+            self._changeOut = value
 
     name = u"Splitter"
     doc = u'Разделяет сигнал на несколько одинаковых'

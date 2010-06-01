@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
 """PyQt4 port of the layouts/flowlayout example from Qt v4.x"""
 

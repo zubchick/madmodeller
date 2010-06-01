@@ -3,11 +3,11 @@
 
 import sys
 from forms import MainForm
-import plugin_manager as pl
+import plugin_manager
 
 def main():
     app, mainForm, window = MainForm.init()
-    block_dict = pl.load()
+    block_dict = plugin_manager.load()
     mainForm.set_blocks(block_dict)
     window.show()
     sys.exit(app.exec_())

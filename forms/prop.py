@@ -1,16 +1,21 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
+"""
+Окно свойст блока которое появляется при двойном щелчке на блоке.
+Отображает изменяемые свойства блока. Изменяемые свойства начинаются
+со слова "change" или "_change".
 
+"""
 from PyQt4 import QtCore, QtGui
 
 
 class Property(QtGui.QWidget):
+    """ Класс окна свойств """
     def __init__(self, parent=None):
         QtGui.QWidget.__init__(self, parent)
         self.setWindowFlags(QtCore.Qt.Window)
 
     def setupUi(self, block_obj):
-        self.params = block_obj._get_params()
+        self.params = block_obj.get_params()
         self.setGeometry(300, 300, 250, 150)
         self.setWindowModality(QtCore.Qt.WindowModal)
         layout = QtGui.QVBoxLayout(self)
@@ -28,8 +33,9 @@ class Property(QtGui.QWidget):
 
             self.form_dict = {}
 
-            for key, value in block_obj._get_params().items():
-                layout.addWidget(QtGui.QLabel(key[6:])) # отрезаем 6 букв от 'change'
+            for key, value in block_obj.get_params().items():
+                # отрезаем 6 букв от 'change'
+                layout.addWidget(QtGui.QLabel(key.lstrip('change').lstrip('_change')))
                 edit = QtGui.QLineEdit(str(value))
                 self.form_dict[key] = edit
                 layout.addWidget(edit)
@@ -37,10 +43,13 @@ class Property(QtGui.QWidget):
             layout.addWidget(self.button_cancel)
 
         else:
-            layout.addWidget(QtGui.QLabel(u'<strong>У блока нет изменяемых свойств.<strong>'))
+            layout.addWidget(QtGui.QLabel(u"""<strong>
+            У блока нет изменяемых свойств.<strong>"""))
+
             layout.addWidget(self.button_cancel)
 
     def set_new_params(self, block_obj):
+        """ Присвоение блоку новых параметров """
         font = QtGui.QFont()
         bold_font = QtGui.QFont()
         bold_font.setBold(True)
@@ -48,7 +57,8 @@ class Property(QtGui.QWidget):
             line.setFont(font)
         for key, value in self.form_dict.items():
             try:
-                val = type(self.params[key])(value.text()) # тип параметра, который был до изменения
+                # тип параметра, который был до изменения
+                val = type(self.params[key])(value.text())
                 setattr(block_obj, key, val)
                 print '{0} new parameters'.format(block_obj)
                 self.close()

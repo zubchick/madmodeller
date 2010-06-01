@@ -9,11 +9,10 @@ from base import Block
 
 class Gain(Block):
     """ Усилитель """
-    def __init__(self, k=1.0):
+    def __init__(self, k=1):
         Block.__init__(self)
         self.changek = k
         self.out = 5
-        self.changeTest = 123
         self.inputs = [None] # обозначаем что вход 1н
         self.outputs = [None] # обозначаем что выход 1н
         self.inp_signals = {0:None}
@@ -24,4 +23,4 @@ class Gain(Block):
     doc = u"Увеличивает приходящий сигнал на постоянный коэффициент"
     def execute(self):
         """ На выходе сигнал умноженный на коэффициент усиления """
-        self.out_signals[0] = self.k * self.inp_signals[0]
+        self.out_signals[0] = self.changek * self.inp_signals[0]

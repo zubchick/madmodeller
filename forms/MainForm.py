@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 from PyQt4 import QtGui, QtCore
@@ -257,7 +256,7 @@ class MyMainWindow(QtGui.QMainWindow):
             item.block = BlockClass()
             item.block.index = hash(str(item.block))
             item.setZValue(3)
-            item.setToolTip(item.block._get_out())
+            item.setToolTip(item.block.get_out())
             self.scene.current = item
             self.scene.set_mode('insert')
             self.set_cursor(BlockClass.image)
@@ -423,6 +422,7 @@ class Scene(QtGui.QGraphicsScene):
 
     def add_line(self, x, y):
         line = Line(x, y)
+
 
 class Line(QtGui.QGraphicsLineItem):
     def __init__(self, start, stop):

@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 class Block(object):
@@ -24,7 +23,7 @@ class Block(object):
     doc = u'Если вы видите эту надпись, значит у блока нет doc-строки'
     image = "images/blocks/default_block.png" # картинка блока
 
-    def _get_out(self):
+    def get_out(self):
         """ Возвращает информацию о исходящих значениях
         в текстовом виде. """
         string = u'<b>%s</b>\n' % self.name
@@ -32,11 +31,19 @@ class Block(object):
             string += u'<b>{0}:</b> {1}\n'.format(key, value)
         return string
 
-    def _get_params(self):
-        """ Возвращает список параметров, которые можно менять в блоке """
-        base_key_list = [key for key in Block().__dict__]
+    def get_params(self):
+        """ Возвращает список параметров, которые можно менять в блоке.
+        Свойство не должно входить в базовый блок, а так же
+        должно начинаться со слова 'change' или '_change'.
+
+        """
+        # ключи базового блока
+        base_key_list = Block().__dict__.keys()
+        # ключи изменяемых параметров
         ret_key_list =  [key for key in self.__dict__ if (key not in base_key_list
-                                                          and key.startswith('change'))]
+                                                          and (key.startswith('change') or
+                                                          key.startswith('_change')))]
+        # значения изменяемых параметров
         ret_value_list = [self.__dict__[key] for key in ret_key_list]
         return dict(zip(ret_key_list, ret_value_list))
 
