@@ -5,6 +5,7 @@ import sys
 import about
 import logger
 import prop
+import arrow as arr_ # вот так все сложно да.
 import flowlayout as flow
 
 
@@ -260,6 +261,7 @@ class MyMainWindow(QtGui.QMainWindow):
             self.scene.current = item
             self.scene.set_mode('insert')
             self.set_cursor(BlockClass.image)
+            ## self.set_cursor('images/cross.png')# или так
             self.block_list.append(item)
             # убираем выделение с остальных кнопочек
             for button in self.blocks_button.values():
@@ -304,6 +306,12 @@ class MyMainWindow(QtGui.QMainWindow):
         ## cursor = QtGui.QCursor(QtCore.Qt.ArrowCursor)
         ## self.main.setCursor(cursor)
         print '%s mode set' % self.mode.capitalize()
+
+    def deleteItem(self):
+        for item in self.scene.selectedItems():
+            if isinstance(item, IBlock):
+                item.removeArrows()
+            self.scene.removeItem(item)
 
 
 ## class myQThread(QtCore.QThread):
@@ -373,17 +381,18 @@ class Scene(QtGui.QGraphicsScene):
     def __init__(self, parent = None):
         QtGui.QGraphicsScene.__init__(self, parent)
         self.mode = 'normal'
+        self.line = None
 
     def set_mode(self, mode):
         self.mode = mode
 
     def mousePressEvent(self, event):
+        if event.button() != QtCore.Qt.LeftButton: # только левая клавиша мыши
+            event.ignore()
+            return
+
         if self.mode == 'draw_line':
-            if event.button() != QtCore.Qt.LeftButton: # только левая клавиша мыши
-                event.ignore()
-                return
-
-
+            # потом надо будет переопределить линию на кривую стрелку
             self.line = QtGui.QGraphicsLineItem(QtCore.QLineF(event.scenePos(),
                                                          event.scenePos()))
             self.line.setPen(QtGui.QPen(QtCore.Qt.black, 2))
@@ -392,56 +401,83 @@ class Scene(QtGui.QGraphicsScene):
         elif self.mode == 'insert':
             print 'Add to form ', self.current.block
             self.addItem(self.current)
-            self.current.setPos(event.scenePos())
+            # берем картинку блока
+            image = QtGui.QPixmap(self.current.block.image)
+            # вычисляем размеры
+            move_to = QtCore.QPointF(image.width() / 2, image.height() / 2)
+            # двигаем ровно под мышьку
+            self.current.setPos(event.scenePos() - move_to)
             self.set_mode('normal')
             self.itemInserted.emit(self.current)
         else:
-            QtGui.QGraphicsScene.mousePressEvent(self, event)
+            super(Scene, self).mousePressEvent(event)
 
     def mouseMoveEvent(self, event):
         if self.mode == 'draw_line' and self.line:
             new_line = QtCore.QLineF(self.line.line().p1(), event.scenePos())
             self.line.setLine(new_line)
         else:
-            QtGui.QGraphicsScene.mousePressEvent(self, event)
+            super(Scene, self).mouseMoveEvent(event)
+#            QtGui.QGraphicsScene.mousePressEvent(self, event)
 
-    def mouseReliseEvent(self, event):
+    def mouseReleaseEvent(self, event):
         if self.line and self.mode == 'draw_line':
-            startItems = self.QGraphicsItem.items(self.line.line().p1())
-            if startItems.count() and startItems.first() == self.line:
-                startItems.removeFirst()
+            startItems = self.items(self.line.line().p1())
+            if len(startItems) and startItems[0] == self.line:
+                startItems.pop(0)
 
-            endItems = self.QGraphicsItem.items(self.line.line().p2())
-        if (endItems.count() and endItems.first() == self.line):
-            endItems.removeFirst()
+            endItems = self.items(self.line.line().p2())
+            if len(endItems) and endItems[0] == self.line:
+                endItems.pop(0)
 
-        self.removeItem(self.line)
+            self.removeItem(self.line)
+            self.line = None
 
-        ## if (startItems.count() > 0 and endItems.count() >0 and
-        ##     startItems.first().type() ==
+            if (len(startItems) and len(endItems) and
+                isinstance(startItems[0], IBlock) and
+                isinstance(endItems[0], IBlock) and
+                startItems[0] != endItems[0]):
+                startItem = startItems[0]
+                endItem = endItems[0]
+                arrow = arr_.Arrow(startItem, endItem) # эта самая кривая линия
+                arrow.setColor(QtCore.Qt.black)
+                startItem.addArrow(arrow)
+                endItem.addArrow(arrow)
+                arrow.setZValue(1)
+                self.addItem(arrow)
+                arrow.updatePosition()
 
-    def add_line(self, x, y):
-        line = Line(x, y)
+        self.line = None
+        super(Scene, self).mouseReleaseEvent(event)
+
+    ## def add_line(self, x, y):
+    ##     line = Line(x, y)
+
+    def isItemChange(self, type):
+        for item in self.selectedItems():
+            if isinstance(item, type):
+                return True
+        return False
 
 
-class Line(QtGui.QGraphicsLineItem):
-    def __init__(self, start, stop):
-        QtCore.QLineF.__init__(self)
-        self.color = QtCore.Qt.black
-        self.path = QtGui.QPainterPath()
-        self.path.moveTo(self)
-        self.start = start
-        self.stop = stop
+## class Line(QtGui.QGraphicsLineItem):
+##     def __init__(self, start, stop):
+##         QtCore.QLineF.__init__(self)
+##         self.color = QtCore.Qt.black
+##         self.path = QtGui.QPainterPath()
+##         self.path.moveTo(self)
+##         self.start = start
+##         self.stop = stop
 
-    def paint(self, painter):
-        """ внешний вид """
-        painter.setPen(QtGui.QPen(self.color, 1))
-        painter.drawLine(self, QtCore.QPointF(self.x() + 15, self.y() + 15))
+##     def paint(self, painter):
+##         """ внешний вид """
+##         painter.setPen(QtGui.QPen(self.color, 1))
+##         painter.drawLine(self, QtCore.QPointF(self.x() + 15, self.y() + 15))
 
-    def clearPath(self):
-        """очистить шлейф"""
-        self.path = QtGui.QPainterPath()
-        self.path.moveTo(self)
+##     def clearPath(self):
+##         """очистить шлейф"""
+##         self.path = QtGui.QPainterPath()
+##         self.path.moveTo(self)
 
 
 def init():
