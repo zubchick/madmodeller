@@ -440,7 +440,7 @@ class Scene(QtGui.QGraphicsScene):
                 startItem = startItems[0]
                 endItem = endItems[0]
                 arrow = arr_.Arrow(startItem, endItem) # эта самая кривая линия
-                arrow.setColor(QtCore.Qt.black)
+                ## arrow.setColor(QtCore.Qt.black)
                 startItem.addArrow(arrow)
                 endItem.addArrow(arrow)
                 arrow.setZValue(1)

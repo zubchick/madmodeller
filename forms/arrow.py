@@ -9,6 +9,7 @@ class Arrow(QtGui.QGraphicsLineItem):
 
         self.arrowHead = QtGui.QPolygonF()
 
+
         self.myStartItem = startItem
         self.myEndItem = endItem
         self.setFlag(QtGui.QGraphicsItem.ItemIsSelectable, True)
@@ -16,14 +17,22 @@ class Arrow(QtGui.QGraphicsLineItem):
         self.setPen(QtGui.QPen(self.myColor, 2, QtCore.Qt.SolidLine,
                 QtCore.Qt.RoundCap, QtCore.Qt.RoundJoin))
 
-    def setColor(self, color):
-        self.myColor = color
+    ## @property
+    ## def myStartItem(self):
+    ##     item = self._myStartItem
+    ##     item.setPos(self._myStartItem.pos() +
+    ##                              self.move_to(self.img_start)
+    ##     return item
 
-    def startItem(self):
-        return self.myStartItem
+    ## @property
+    ## def myEndItem(self):
+    ##     return self._myEndItem.pos() + self.move_to(self.img_end)
 
-    def endItem(self):
-        return self.myEndItem
+    ## def startItem(self):
+    ##     return self.myStartItem
+
+    ## def endItem(self):
+    ##     return self.myEndItem
 
     def boundingRect(self):
         extra = (self.pen().width() + 20) / 2.0
@@ -49,48 +58,61 @@ class Arrow(QtGui.QGraphicsLineItem):
         myEndItem = self.myEndItem
         myColor = self.myColor
         myPen = self.pen()
-        myPen.setColor(self.myColor)
+        ## myPen.setColor(self.myColor)
         arrowSize = 10.0
         painter.setPen(myPen)
         painter.setBrush(self.myColor)
 
+        move_to = lambda img: QtCore.QPointF(img.width() / 2, img.height() / 2)
+
+        img_end = QtGui.QPixmap(myEndItem.block.image)
+        mv_end = move_to(img_end)
+        mv_start = move_to(QtGui.QPixmap(myStartItem.block.image))
         centerLine = QtCore.QLineF(myStartItem.pos(), myEndItem.pos())
-        ## endPolygon = myEndItem.polygon()
-        ## p1 = endPolygon.first() + myEndItem.pos()
+
+        ## endPolygon = QtGui.QPolygon(QtCore.QRect(myEndItem.pos().x() + mv_end.x(),
+        ##                                          myEndItem.pos().y() + mv_end.y(),
+        ##                                          img_end.width(),
+        ##                                          img_end.height()))
+
+        endPolygon = QtGui.QPolygon(img_end.rect())
+        p1 = QtCore.QPointF(endPolygon.first()) + myEndItem.pos()# + mv_end
 
         intersectPoint = QtCore.QPointF()
-        ## for i in endPolygon:
-        ##     p2 = i + myEndItem.pos()
-        ##     polyLine = QtCore.QLineF(p1, p2)
-        ##     intersectType = polyLine.intersect(centerLine, intersectPoint)
-        ##     if intersectType == QtCore.QLineF.BoundedIntersection:
-        ##         break
-        ##     p1 = p2
+        for i in endPolygon:
+            i = QtCore.QPointF(i)
+            p2 = i + myEndItem.pos() + mv_end
+            polyLine = QtCore.QLineF(p1, p2)
+            intersectType = polyLine.intersect(centerLine, intersectPoint)
+            if intersectType == QtCore.QLineF.BoundedIntersection:
+                break
+            p1 = p2
 
-        self.setLine(QtCore.QLineF(intersectPoint, myStartItem.pos()))
+
+        self.setLine(QtCore.QLineF(intersectPoint, myStartItem.pos() + mv_start))
 
         line = self.line()
 
-        ## angle = math.acos(line.dx() / line.length())
-        ## if line.dy() >= 0:
-        ##     angle = (math.pi * 2.0) - angle
+        angle = math.acos(line.dx() / line.length())
+        if line.dy() >= 0:
+            angle = (math.pi * 2.0) - angle
 
-        ## arrowP1 = line.p1() + QtCore.QPointF(math.sin(angle + math.pi / 3.0) * arrowSize,
-        ##                                 math.cos(angle + math.pi / 3) * arrowSize)
-        ## arrowP2 = line.p1() + QtCore.QPointF(math.sin(angle + math.pi - math.pi / 3.0) * arrowSize,
-        ##                                 math.cos(angle + math.pi - math.pi / 3.0) * arrowSize)
+        arrowP1 = line.p1() + QtCore.QPointF(math.sin(angle + math.pi / 3.0) * arrowSize,
+                                        math.cos(angle + math.pi / 3) * arrowSize)
+        arrowP2 = line.p1() + QtCore.QPointF(math.sin(angle + math.pi - math.pi / 3.0) * arrowSize,
+                                        math.cos(angle + math.pi - math.pi / 3.0) * arrowSize)
 
-        ## self.arrowHead.clear()
-        ## for point in [line.p1(), arrowP1, arrowP2]:
-        ##     self.arrowHead.append(point)
+        self.arrowHead.clear()
+        for point in [line.p1(), arrowP1, arrowP2]:
+            self.arrowHead.append(point)
 
         painter.drawLine(line)
-        ## painter.drawPolygon(self.arrowHead)
-        ## if self.isSelected():
-        ##     painter.setPen(QtGui.QPen(myColor, 1, QtCore.Qt.DashLine))
-        ##     myLine = QtCore.QLineF(line)
-        ##     myLine.translate(0, 4.0)
-        ##     painter.drawLine(myLine)
-        ##     myLine.translate(0,-8.0)
-        ##     painter.drawLine(myLine)
+        painter.drawPolygon(self.arrowHead)
+        if self.isSelected():
+            painter.setPen(QtGui.QPen(myColor, 1, QtCore.Qt.DashLine))
+            myLine = QtCore.QLineF(line)
+            myLine.translate(0, 4.0)
+            painter.drawLine(myLine)
+            myLine.translate(0,-8.0)
+            painter.drawLine(myLine)
 
