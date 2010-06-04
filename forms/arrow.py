@@ -17,22 +17,13 @@ class Arrow(QtGui.QGraphicsLineItem):
         self.setPen(QtGui.QPen(self.myColor, 2, QtCore.Qt.SolidLine,
                 QtCore.Qt.RoundCap, QtCore.Qt.RoundJoin))
 
-    ## @property
-    ## def myStartItem(self):
-    ##     item = self._myStartItem
-    ##     item.setPos(self._myStartItem.pos() +
-    ##                              self.move_to(self.img_start)
-    ##     return item
+    @property
+    def startItem(self):
+        return self.myStartItem
 
-    ## @property
-    ## def myEndItem(self):
-    ##     return self._myEndItem.pos() + self.move_to(self.img_end)
-
-    ## def startItem(self):
-    ##     return self.myStartItem
-
-    ## def endItem(self):
-    ##     return self.myEndItem
+    @property
+    def endItem(self):
+        return self.myEndItem
 
     def boundingRect(self):
         extra = (self.pen().width() + 20) / 2.0
@@ -64,19 +55,16 @@ class Arrow(QtGui.QGraphicsLineItem):
         painter.setBrush(self.myColor)
 
         move_to = lambda img: QtCore.QPointF(img.width() / 2, img.height() / 2)
+        _move_to = lambda img: QtCore.QPointF(img.rect().center())
 
         img_end = QtGui.QPixmap(myEndItem.block.image)
-        mv_end = move_to(img_end)
-        mv_start = move_to(QtGui.QPixmap(myStartItem.block.image))
-        centerLine = QtCore.QLineF(myStartItem.pos(), myEndItem.pos())
-
-        ## endPolygon = QtGui.QPolygon(QtCore.QRect(myEndItem.pos().x() + mv_end.x(),
-        ##                                          myEndItem.pos().y() + mv_end.y(),
-        ##                                          img_end.width(),
-        ##                                          img_end.height()))
+        mv_end = _move_to(img_end)
+        mv_start = _move_to(QtGui.QPixmap(myStartItem.block.image))
+        centerLine = QtCore.QLineF(myStartItem.pos() + mv_start,
+                                   myEndItem.pos() + mv_end)
 
         endPolygon = QtGui.QPolygon(img_end.rect())
-        p1 = QtCore.QPointF(endPolygon.first()) + myEndItem.pos()# + mv_end
+        p1 = QtCore.QPointF(endPolygon.first()) + myEndItem.pos() - mv_end
 
         intersectPoint = QtCore.QPointF()
         for i in endPolygon:

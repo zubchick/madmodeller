@@ -79,6 +79,12 @@ class MyMainWindow(QtGui.QMainWindow):
         MainWindow_.connect(act_draw_line, QtCore.SIGNAL('triggered()'),
                            self.draw_line)
 
+        # delete
+        act_delete = QtGui.QAction(QtGui.QIcon('images/delete.png'),
+                u'Удалить', self, shortcut="Delete",
+                statusTip=u'Удалить элемент с рабочего поля.',
+                triggered=self.deleteItem)
+
         # background-image
         act_bgr_img = QtGui.QAction(QtGui.QIcon('images/background.png'),
                                  u'Установить фон', self.main)
@@ -170,6 +176,7 @@ class MyMainWindow(QtGui.QMainWindow):
         toolbar.addAction(act_save_as)
         toolbar.addAction(act_bgr_img)
         toolbar.addAction(act_draw_line)
+        toolbar.addAction(act_delete)
         toolbar.addAction(act_run)
         toolbar.addAction(act_help)
         toolbar.addAction(act_exit)
@@ -353,8 +360,8 @@ class IBlock(QtGui.QGraphicsPixmapItem):
 
     def removeArrows(self):
         for arrow in self.arrows[:]:
-            arrow.startItem().removeArrow(arrow)
-            arrow.endItem().removeArrow(arrow)
+            arrow.startItem.removeArrow(arrow)
+            arrow.endItem.removeArrow(arrow)
             self.scene().removeItem(arrow)
 
     def addArrow(self, arrow):
@@ -404,7 +411,8 @@ class Scene(QtGui.QGraphicsScene):
             # берем картинку блока
             image = QtGui.QPixmap(self.current.block.image)
             # вычисляем размеры
-            move_to = QtCore.QPointF(image.width() / 2, image.height() / 2)
+            ## move_to = QtCore.QPointF(image.width() / 2, image.height() / 2)
+            move_to = QtCore.QPointF(image.rect().center())
             # двигаем ровно под мышьку
             self.current.setPos(event.scenePos() - move_to)
             self.set_mode('normal')
