@@ -5,7 +5,7 @@ import sys
 import about
 import logger
 import prop
-import arrow as arr_ # вот так все сложно да.
+import arrow_new as arr_ # вот так все сложно да.
 import flowlayout as flow
 
 
@@ -334,6 +334,7 @@ class IBlock(QtGui.QGraphicsPixmapItem):
         self.arrows = []
         self.setFlag(QtGui.QGraphicsItem.ItemIsSelectable, True)
         self.setFlag(QtGui.QGraphicsItem.ItemIsMovable, True)
+        self.pix = pixmap
 
     ## def mousePressEvent(self, event):
     ##     if event.button() != QtCore.Qt.LeftButton: # только левая клавиша мыши
@@ -342,6 +343,21 @@ class IBlock(QtGui.QGraphicsPixmapItem):
     ##     print 'You pressed ', self.block
     ##     ## if scene.mode == 'draw_line':
     ##     ##     line = QGui.QGraphicsLineItem(QtCore.QLineF(
+
+    def pos(self):
+        return (super(IBlock, self).scenePos() +
+                QtCore.QPointF(self.pix.rect().center()))
+
+    @property
+    def back_points(self):
+        """ Возвращаяет две точки, лежащие на 'задней'
+        линии картинки блока, для рассчета точки
+        соприкосновения стрелки
+
+        """
+        end_center = self.pix.rect().center()
+        return (QtCore.QPointF(-end_center.x(), -end_center.y()),
+                QtCore.QPointF(-end_center.x(), end_center.y()))
 
     def mouseDoubleClickEvent(self, event):
         if event.button() != QtCore.Qt.LeftButton: # только левая клавиша мыши
@@ -367,12 +383,12 @@ class IBlock(QtGui.QGraphicsPixmapItem):
     def addArrow(self, arrow):
         self.arrows.append(arrow)
 
-    def itemChange(self, change, value):
-        if change == QtGui.QGraphicsItem.ItemPositionChange:
-            for arrow in self.arrows:
-                arrow.updatePosition()
+    ## def itemChange(self, change, value):
+    ##     if change == QtGui.QGraphicsItem.ItemPositionChange:
+    ##         for arrow in self.arrows:
+    ##             arrow.updatePosition()
 
-        return value
+    ##     return value
 
     def contextMenuEvent(self, event):
         self.scene().clearSelection()
@@ -453,7 +469,7 @@ class Scene(QtGui.QGraphicsScene):
                 endItem.addArrow(arrow)
                 arrow.setZValue(1)
                 self.addItem(arrow)
-                arrow.updatePosition()
+#                arrow.updatePosition()
 
         self.line = None
         super(Scene, self).mouseReleaseEvent(event)

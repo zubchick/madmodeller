@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
 from PyQt4 import QtGui, QtCore
 import math
@@ -36,10 +36,10 @@ class Arrow(QtGui.QGraphicsLineItem):
         path.addPolygon(self.arrowHead)
         return path
 
-    def updatePosition(self):
-        line = QtCore.QLineF(self.mapFromItem(self.myStartItem, 0, 0),
-                             self.mapFromItem(self.myEndItem, 0, 0))
-        self.setLine(line)
+    ## def updatePosition(self):
+    ##     line = QtCore.QLineF(self.mapFromItem(self.myStartItem, 0, 0),
+    ##                          self.mapFromItem(self.myEndItem, 0, 0))
+    ##     self.setLine(line)
 
     def paint(self, painter, option, widget=None):
         if (self.myStartItem.collidesWithItem(self.myEndItem)):
@@ -49,36 +49,23 @@ class Arrow(QtGui.QGraphicsLineItem):
         myEndItem = self.myEndItem
         myColor = self.myColor
         myPen = self.pen()
-        ## myPen.setColor(self.myColor)
         arrowSize = 10.0
         painter.setPen(myPen)
         painter.setBrush(self.myColor)
 
-        move_to = lambda img: QtCore.QPointF(img.width() / 2, img.height() / 2)
-        _move_to = lambda img: QtCore.QPointF(img.rect().center())
+        p1, p2 = myEndItem.back_points
 
-        img_end = QtGui.QPixmap(myEndItem.block.image)
-        mv_end = _move_to(img_end)
-        mv_start = _move_to(QtGui.QPixmap(myStartItem.block.image))
-        centerLine = QtCore.QLineF(myStartItem.pos() + mv_start,
-                                   myEndItem.pos() + mv_end)
+        back_line = QtCore.QLineF(p1+ myEndItem.pos(), p2 + myEndItem.pos())
+        in_number = 1 # потом надо будет получать это от пользователя
+        in_count = 2 # потом надо будет получать от блока
+        # Pi(x,y)=> x=x1; y = ((i/N+1)*(y2-y1)+y1)
+        end_point = QtCore.QPointF(back_line.p1().x(),
+                                   ((back_line.p2().y() - back_line.p1().y()) *
+                                   (in_number / float(in_count + 1)) + back_line.p1().y()))
 
-        endPolygon = QtGui.QPolygon(img_end.rect())
-        p1 = QtCore.QPointF(endPolygon.first()) + myEndItem.pos() - mv_end
+        self.setLine(QtCore.QLineF(end_point, myStartItem.pos()))
 
-        intersectPoint = QtCore.QPointF()
-        for i in endPolygon:
-            i = QtCore.QPointF(i)
-            p2 = i + myEndItem.pos() + mv_end
-            polyLine = QtCore.QLineF(p1, p2)
-            intersectType = polyLine.intersect(centerLine, intersectPoint)
-            if intersectType == QtCore.QLineF.BoundedIntersection:
-                break
-            p1 = p2
-
-
-        self.setLine(QtCore.QLineF(intersectPoint, myStartItem.pos() + mv_start))
-
+        # Рисуем наконечник!
         line = self.line()
 
         angle = math.acos(line.dx() / line.length())
@@ -103,4 +90,3 @@ class Arrow(QtGui.QGraphicsLineItem):
             painter.drawLine(myLine)
             myLine.translate(0,-8.0)
             painter.drawLine(myLine)
-
