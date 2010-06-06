@@ -15,16 +15,16 @@ class Sum(Block):
 
     def __init__(self, k=1):
         Block.__init__(self)
-        self._changeInputs = self.inp
+        self._changeInput = self.inp
 
     @property
     def changeInput(self):
-        return self._changeInputs
+        return self._changeInput
 
     @changeInput.setter
     def changeInput(self, value):
         self.inp = value
-        self._changeInputs = self.inp
+        self._changeInput = self.inp
 
     def execute(self):
         pass

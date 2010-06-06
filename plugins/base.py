@@ -64,12 +64,13 @@ class Block(object):
         # ключи базового блока
         base_key_list = Block().__dict__.keys()
         # ключи изменяемых параметров
-        ret_key_list =  [key for key in self.__dict__ if (key not in base_key_list
+        ret_key_list = [key for key in self.__dict__ if (key not in base_key_list
                                                           and (key.startswith('change') or
                                                           key.startswith('_change')))]
+        strip_key_list = map(lambda x: x.lstrip('_'), ret_key_list)
         # значения изменяемых параметров
         ret_value_list = [self.__dict__[key] for key in ret_key_list]
-        return dict(zip(ret_key_list, ret_value_list))
+        return dict(zip(strip_key_list, ret_value_list))
 
     def execute(self):
         """
