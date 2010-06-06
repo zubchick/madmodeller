@@ -4,11 +4,11 @@ from PyQt4 import QtGui, QtCore
 import math
 
 class Arrow(QtGui.QGraphicsLineItem):
-    def __init__(self, startItem, endItem, parent=None, scene=None):
+    def __init__(self, startItem, endItem, inp, parent=None, scene=None):
         super(Arrow, self).__init__(parent, scene)
 
         self.arrowHead = QtGui.QPolygonF()
-
+        self.inp = inp
 
         self.myStartItem = startItem
         self.myEndItem = endItem
@@ -55,15 +55,15 @@ class Arrow(QtGui.QGraphicsLineItem):
 
         p1, p2 = myEndItem.back_points
 
-        back_line = QtCore.QLineF(p1+ myEndItem.pos(), p2 + myEndItem.pos())
-        in_number = 1 # потом надо будет получать это от пользователя
-        in_count = 2 # потом надо будет получать от блока
+        back_line = QtCore.QLineF(p1+ myEndItem.pos, p2 + myEndItem.pos)
+        in_number = self.inp # номер входа
+        in_count = myEndItem.block.inp # максимальное число входов
         # Pi(x,y)=> x=x1; y = ((i/N+1)*(y2-y1)+y1)
         end_point = QtCore.QPointF(back_line.p1().x(),
                                    ((back_line.p2().y() - back_line.p1().y()) *
                                    (in_number / float(in_count + 1)) + back_line.p1().y()))
 
-        self.setLine(QtCore.QLineF(end_point, myStartItem.pos()))
+        self.setLine(QtCore.QLineF(end_point, myStartItem.pos))
 
         # Рисуем наконечник!
         line = self.line()

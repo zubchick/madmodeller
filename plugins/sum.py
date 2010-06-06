@@ -9,12 +9,22 @@ from base import Block
 
 class Sum(Block):
     """ Сумматор  """
-    def __init__(self, k=1):
-        Block.__init__(self)
-
     name = u"Sum"
     doc = u'Складывает входящие сигналы'
     image = u'images/blocks/sum.png'
+
+    def __init__(self, k=1):
+        Block.__init__(self)
+        self._changeInputs = self.inp
+
+    @property
+    def changeInput(self):
+        return self._changeInputs
+
+    @changeInput.setter
+    def changeInput(self, value):
+        self.inp = value
+        self._changeInputs = self.inp
 
     def execute(self):
         pass

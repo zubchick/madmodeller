@@ -5,7 +5,7 @@ import sys
 import about
 import logger
 import prop
-import arrow_new as arr_ # вот так все сложно да.
+import arrow as arr_ # вот так все сложно да.
 import flowlayout as flow
 
 
@@ -40,7 +40,7 @@ class MyMainWindow(QtGui.QMainWindow):
         self.main = MainWindow_
 
 
-        self.scene = Scene()
+        self.scene = Scene(self.main)
         self.scene.setSceneRect(QtCore.QRectF(0, 0, 500, 500))
         self.scene.itemInserted.connect(self.itemInserted)
         # graphics
@@ -256,9 +256,6 @@ class MyMainWindow(QtGui.QMainWindow):
 
     def add_block(self, BlockClass):
         """ Добавить блок на рабочее поле """
-        ## item = self.scene.addPixmap(QtGui.QPixmap(BlockClass.image))
-        ## item.setFlags(QtGui.QGraphicsItem.ItemIsMovable)
-        ## item.setZValue(3)
         if self.mode == 'normal':
             item = IBlock(QtGui.QPixmap(BlockClass.image))
             item.block = BlockClass()
@@ -336,14 +333,7 @@ class IBlock(QtGui.QGraphicsPixmapItem):
         self.setFlag(QtGui.QGraphicsItem.ItemIsMovable, True)
         self.pix = pixmap
 
-    ## def mousePressEvent(self, event):
-    ##     if event.button() != QtCore.Qt.LeftButton: # только левая клавиша мыши
-    ##         event.ignore()
-    ##         return
-    ##     print 'You pressed ', self.block
-    ##     ## if scene.mode == 'draw_line':
-    ##     ##     line = QGui.QGraphicsLineItem(QtCore.QLineF(
-
+    @property
     def pos(self):
         return (super(IBlock, self).scenePos() +
                 QtCore.QPointF(self.pix.rect().center()))
@@ -358,15 +348,6 @@ class IBlock(QtGui.QGraphicsPixmapItem):
         end_center = self.pix.rect().center()
         return (QtCore.QPointF(-end_center.x(), -end_center.y()),
                 QtCore.QPointF(-end_center.x(), end_center.y()))
-
-    def mouseDoubleClickEvent(self, event):
-        if event.button() != QtCore.Qt.LeftButton: # только левая клавиша мыши
-            event.ignore()
-            return
-        property_window = prop.Property(MainWindow) # этот грязный хак, надо убрать
-        property_window.setupUi(self.block)
-        property_window.show()
-        print 'You doubleClecked ', self.block
 
     def removeArrow(self, arrow):
         try:
@@ -405,9 +386,21 @@ class Scene(QtGui.QGraphicsScene):
         QtGui.QGraphicsScene.__init__(self, parent)
         self.mode = 'normal'
         self.line = None
+        self.parent = parent
 
     def set_mode(self, mode):
         self.mode = mode
+
+    def mouseDoubleClickEvent(self, event):
+        if event.button() != QtCore.Qt.LeftButton: # только левая клавиша мыши
+            event.ignore()
+            return
+        if self.mode == 'normal':
+            item = self.items(event.scenePos())[0]
+            property_window = prop.Property(self.parent)
+            property_window.setupUi(item.block)
+            property_window.show()
+            print 'You doubleClecked ', item.block
 
     def mousePressEvent(self, event):
         if event.button() != QtCore.Qt.LeftButton: # только левая клавиша мыши
@@ -442,7 +435,6 @@ class Scene(QtGui.QGraphicsScene):
             self.line.setLine(new_line)
         else:
             super(Scene, self).mouseMoveEvent(event)
-#            QtGui.QGraphicsScene.mousePressEvent(self, event)
 
     def mouseReleaseEvent(self, event):
         if self.line and self.mode == 'draw_line':
@@ -463,13 +455,20 @@ class Scene(QtGui.QGraphicsScene):
                 startItems[0] != endItems[0]):
                 startItem = startItems[0]
                 endItem = endItems[0]
-                arrow = arr_.Arrow(startItem, endItem) # эта самая кривая линия
+                max_inp = endItems[0].block.inp
+                if max_inp > 1:
+                    inp, ok = QtGui.QInputDialog.getInteger(self.parent, u'Выбор входа.',
+                                                            u'Выберете вход (1..{0}):'.format(max_inp),
+                                                            1, 1, max_inp, 1)
+                else:
+                    inp = 1
+
+                arrow = arr_.Arrow(startItem, endItem, inp)
                 ## arrow.setColor(QtCore.Qt.black)
                 startItem.addArrow(arrow)
                 endItem.addArrow(arrow)
                 arrow.setZValue(1)
                 self.addItem(arrow)
-#                arrow.updatePosition()
 
         self.line = None
         super(Scene, self).mouseReleaseEvent(event)

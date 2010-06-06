@@ -9,19 +9,43 @@ class Block(object):
         self.inputs = [] # с каких блоков приходит сигнал
         self.outputs = [] # на какие уходит. Индексы.
 
+        self._inp = 1
+        self._out = 1
         self.inp_signals = {} # значения сигналов
         self.out_signals = {} # number:value = номер входа/выхода:значение
         self.type = ''
         self.defaults = {}
         # Все свойства, которым можно изменить через форму,
         # которая появляется по двойному клику на блоке,
-        # должны иметь префикс "change".
+        # должны иметь префикс "change" или "_change".
         # Пример:
         # self.changeTestValue = 666 # будет отображаться как TestValue
 
     name = u"Anonimus" # Отображаемое имя блока
     doc = u'Если вы видите эту надпись, значит у блока нет doc-строки'
     image = "images/blocks/default_block.png" # картинка блока
+
+    @property
+    def inp(self):
+        """ Возвращает количество сигналов, которые может принимать блок
+        """
+        return self._inp
+
+    @inp.setter
+    def inp(self, value):
+        if value > 0:
+            self._inp = value
+
+    @property
+    def out(self):
+        """ Возвращает количество сигналов, которые может отдавать блок
+        """
+        return self._out
+
+    @inp.setter
+    def out(self, value):
+        if value >= 0:
+            self._out = value
 
     def get_out(self):
         """ Возвращает информацию о исходящих значениях
