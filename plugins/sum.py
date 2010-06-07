@@ -15,6 +15,7 @@ class Sum(Block):
 
     def __init__(self, k=1):
         Block.__init__(self)
+        self.inp = 2
         self._changeInput = self.inp
 
     @property

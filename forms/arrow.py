@@ -63,6 +63,9 @@ class Arrow(QtGui.QGraphicsLineItem):
                                    ((back_line.p2().y() - back_line.p1().y()) *
                                    (in_number / float(in_count + 1)) + back_line.p1().y()))
 
+
+        # Рисуем ломаную линию
+        
         self.setLine(QtCore.QLineF(end_point, myStartItem.pos))
 
         # Рисуем наконечник!

@@ -16,6 +16,7 @@ class Constant(Block):
     def __init__(self):
         Block.__init__(self)
         self.changeConstant = 1
+        self.inp = 0
 
     def execute(self):
         self.out_signals[0] = self.changeConstant

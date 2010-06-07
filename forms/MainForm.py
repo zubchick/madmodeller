@@ -43,6 +43,7 @@ class MyMainWindow(QtGui.QMainWindow):
         self.scene = Scene(self.main)
         self.scene.setSceneRect(QtCore.QRectF(0, 0, 500, 500))
         self.scene.itemInserted.connect(self.itemInserted)
+        self.scene.backInserted.connect(self.backInserted)
         # graphics
         self.view = QtGui.QGraphicsView(self.scene, self.main)
 
@@ -50,47 +51,25 @@ class MyMainWindow(QtGui.QMainWindow):
         self.view.setRenderHints(QtGui.QPainter.Antialiasing |
                                  QtGui.QPainter.SmoothPixmapTransform)
 
-        self.background = self.scene.addPixmap(QtGui.QPixmap("")) # без фона
 
         MainWindow_.setCentralWidget(self.view)
 
         self.menubar = QtGui.QMenuBar(MainWindow_)
 
         self.menuFile = QtGui.QMenu(self.menubar)
-        self.menuFile = self.menubar.addMenu(u'&Файл')
-        ## self.menuEdit = QtGui.QMenu(self.menubar)
-        ## self.menuEdit = self.menubar.addMenu(u'&Правка')
+        self.menuFile = self.menubar.addMenu(u'Файл')
+        self.menuEdit = QtGui.QMenu(self.menubar)
+        self.menuEdit = self.menubar.addMenu(u'Правка')
         self.menuTools = QtGui.QMenu(self.menubar)
-        self.menuTools = self.menubar.addMenu(u'&Инструменты')
+        self.menuTools = self.menubar.addMenu(u'Инструменты')
         self.menuHelp = QtGui.QMenu(self.menubar)
-        self.menuHelp = self.menubar.addMenu(u'&Справка')
+        self.menuHelp = self.menubar.addMenu(u'Справка')
 
         MainWindow_.setMenuBar(self.menubar)
 
         # mode - состояние программы
         self.mode = 'normal'
 
-        # draw - line
-        act_draw_line = QtGui.QAction(QtGui.QIcon('images/draw_line.png'),
-                                 u'Установить связь', self.main)
-        act_draw_line.setCheckable(True)
-        act_draw_line.setShortcut('Space')
-        act_draw_line.setStatusTip(u'Установить связь между блоками')
-        MainWindow_.connect(act_draw_line, QtCore.SIGNAL('triggered()'),
-                           self.draw_line)
-
-        # delete
-        act_delete = QtGui.QAction(QtGui.QIcon('images/delete.png'),
-                u'Удалить', self, shortcut="Delete",
-                statusTip=u'Удалить элемент с рабочего поля.',
-                triggered=self.deleteItem)
-
-        # background-image
-        act_bgr_img = QtGui.QAction(QtGui.QIcon('images/background.png'),
-                                 u'Установить фон', self.main)
-        act_bgr_img.setStatusTip(u'Устанофить фон для рабочей области')
-        MainWindow_.connect(act_bgr_img, QtCore.SIGNAL('triggered()'),
-                           self.add_background)
 
         # open
         act_open = QtGui.QAction(QtGui.QIcon('images/open.png'),
@@ -117,6 +96,35 @@ class MyMainWindow(QtGui.QMainWindow):
         act_exit.setStatusTip(u'Выйти из приложения')
         MainWindow_.connect(act_exit, QtCore.SIGNAL('triggered()'),
                      QtCore.SLOT('close()'))
+
+        # delete
+        act_delete = QtGui.QAction(QtGui.QIcon('images/delete.png'),
+                u'Удалить элемент', self, shortcut="Delete",
+                statusTip=u'Удалить элемент с рабочего поля.',
+                triggered=self.deleteItem)
+
+        # background-image
+        act_bgr_img = QtGui.QAction(QtGui.QIcon('images/background.png'),
+                                 u'Установить фон', self.main)
+        act_bgr_img.setStatusTip(u'Устанофить фон для рабочей области')
+        MainWindow_.connect(act_bgr_img, QtCore.SIGNAL('triggered()'),
+                           self.add_background)
+
+        # delete background
+        act_bgr_del = QtGui.QAction(QtGui.QIcon('images/delete_background.png'),
+                                 u'Удалить фон', self.main)
+        act_bgr_del.setStatusTip(u'Удалить фон с рабочей области')
+        MainWindow_.connect(act_bgr_del, QtCore.SIGNAL('triggered()'),
+                           self.del_background)
+
+        # draw - line
+        act_draw_line = QtGui.QAction(QtGui.QIcon('images/draw_line.png'),
+                                 u'Установить связь', self.main)
+        act_draw_line.setCheckable(True)
+        act_draw_line.setShortcut('Space')
+        act_draw_line.setStatusTip(u'Установить связь между блоками')
+        MainWindow_.connect(act_draw_line, QtCore.SIGNAL('triggered()'),
+                           self.draw_line)
 
         # plugin manager
         act_plugins = QtGui.QAction(QtGui.QIcon('images/plugins.png'),
@@ -156,7 +164,11 @@ class MyMainWindow(QtGui.QMainWindow):
         self.menuFile.addAction(act_save_as)
         self.menuFile.addAction(act_exit)
 
-        ## self.menuEdit.addAction(act_bgr_img)
+        self.menuEdit.addAction(act_bgr_img)
+        self.menuEdit.addAction(act_bgr_del)
+        self.menuEdit.addAction(act_delete)
+        self.menuEdit.addAction(act_draw_line)
+
 
         self.menuTools.addAction(act_plugins)
         self.menuTools.addAction(act_console)
@@ -166,7 +178,7 @@ class MyMainWindow(QtGui.QMainWindow):
         self.menuHelp.addAction(act_about)
 
         self.menubar.addAction(self.menuFile.menuAction())
-        ## self.menubar.addAction(self.menuEdit.menuAction())
+        self.menubar.addAction(self.menuEdit.menuAction())
         self.menubar.addAction(self.menuTools.menuAction())
         self.menubar.addAction(self.menuHelp.menuAction())
 
@@ -189,13 +201,12 @@ class MyMainWindow(QtGui.QMainWindow):
 
         self.dockWidget = QtGui.QDockWidget(MainWindow_)
         self.dockWidget.setWindowTitle(u'Блоки')
-        self.dockWidget.setMinimumSize(200, 10)
+        self.dockWidget.setMinimumSize(160, 10)
 
         doc_contents = QtGui.QWidget()
         layout_main = QtGui.QVBoxLayout(self)
         doc_contents.setLayout(layout_main)
         self.scroll_area = QtGui.QScrollArea()
-        ## self.scroll_area.setBackgroundRole(QtGui.QPalette.Dark)
         layout_main.addWidget(self.scroll_area)
         self.scroll_widget = QtGui.QWidget()
 
@@ -206,6 +217,9 @@ class MyMainWindow(QtGui.QMainWindow):
 
         self.dockWidget.setWidget(doc_contents)
         MainWindow_.addDockWidget(QtCore.Qt.DockWidgetArea(1), self.dockWidget)
+
+    def backInserted(self):
+        self.set_cursor()
 
     def itemInserted(self, item):
         self.blocks_button[item.block.name].setChecked(False)
@@ -278,11 +292,15 @@ class MyMainWindow(QtGui.QMainWindow):
         if self.mode == 'normal':
             img = QtGui.QFileDialog.getOpenFileName(caption = u'Выбрать фон',
                                                     filter = u'Картинки (*.png *.jpg)')
-            self.scene.removeItem(self.background)
-            self.background = self.scene.addPixmap(QtGui.QPixmap(img))
-            self.background.setFlags(QtGui.QGraphicsItem.ItemIsMovable)
-            self.background.setZValue(-1000.0)
-            print 'Background add to form ', img
+            if img:
+                self.scene.set_mode('background')
+                self.set_cursor('images/cross.png')
+                self.scene.removeItem(self.scene.background)
+                self.scene.backgound = img
+
+    def del_background(self):
+        """ Удалить фоновую картинку """
+        self.scene.removeItem(self.scene.background)
 
     def set_cursor(self, pic=None):
         """ Устанавливает вид курсора """
@@ -302,6 +320,7 @@ class MyMainWindow(QtGui.QMainWindow):
             ## self.main.setCursor(cursor)
         elif self.mode == 'draw_line':
             self.set_normal_mode()
+
 
     def set_normal_mode(self):
         self.mode = 'normal'
@@ -379,7 +398,7 @@ class IBlock(QtGui.QGraphicsPixmapItem):
 
 class Scene(QtGui.QGraphicsScene):
     itemInserted = QtCore.pyqtSignal(IBlock)
-
+    backInserted = QtCore.pyqtSignal()
     itemSelected = QtCore.pyqtSignal(QtGui.QGraphicsItem)
 
     def __init__(self, parent = None):
@@ -387,6 +406,7 @@ class Scene(QtGui.QGraphicsScene):
         self.mode = 'normal'
         self.line = None
         self.parent = parent
+        self.background = self.addPixmap(QtGui.QPixmap('')) # без фона
 
     def set_mode(self, mode):
         self.mode = mode
@@ -396,11 +416,14 @@ class Scene(QtGui.QGraphicsScene):
             event.ignore()
             return
         if self.mode == 'normal':
-            item = self.items(event.scenePos())[0]
-            property_window = prop.Property(self.parent)
-            property_window.setupUi(item.block)
-            property_window.show()
-            print 'You doubleClecked ', item.block
+            try:
+                item = self.items(event.scenePos())[0]
+                property_window = prop.Property(self.parent)
+                property_window.setupUi(item.block)
+                property_window.show()
+                print 'You doubleClecked ', item.block
+            except IndexError:
+                super(Scene, self).mouseDoubleClickEvent(event)
 
     def mousePressEvent(self, event):
         if event.button() != QtCore.Qt.LeftButton: # только левая клавиша мыши
@@ -414,6 +437,7 @@ class Scene(QtGui.QGraphicsScene):
             self.line.setPen(QtGui.QPen(QtCore.Qt.black, 2))
             self.addItem(self.line)
             #self.update()
+
         elif self.mode == 'insert':
             print 'Add to form ', self.current.block
             self.addItem(self.current)
@@ -426,6 +450,18 @@ class Scene(QtGui.QGraphicsScene):
             self.current.setPos(event.scenePos() - move_to)
             self.set_mode('normal')
             self.itemInserted.emit(self.current)
+
+        elif self.mode == 'background':
+            image = QtGui.QPixmap(self.backgound)
+            move_to = QtCore.QPointF(image.rect().center())
+            self.background = self.addPixmap(image)
+            self.background.setPos(event.scenePos() - move_to)
+            self.background.setFlags(QtGui.QGraphicsItem.ItemIsMovable)
+            self.background.setZValue(-1000.0)
+            print 'Background add to form ', self.background
+            self.set_mode('normal')
+            self.backInserted.emit()
+
         else:
             super(Scene, self).mousePressEvent(event)
 
@@ -473,34 +509,11 @@ class Scene(QtGui.QGraphicsScene):
         self.line = None
         super(Scene, self).mouseReleaseEvent(event)
 
-    ## def add_line(self, x, y):
-    ##     line = Line(x, y)
-
     def isItemChange(self, type):
         for item in self.selectedItems():
             if isinstance(item, type):
                 return True
         return False
-
-
-## class Line(QtGui.QGraphicsLineItem):
-##     def __init__(self, start, stop):
-##         QtCore.QLineF.__init__(self)
-##         self.color = QtCore.Qt.black
-##         self.path = QtGui.QPainterPath()
-##         self.path.moveTo(self)
-##         self.start = start
-##         self.stop = stop
-
-##     def paint(self, painter):
-##         """ внешний вид """
-##         painter.setPen(QtGui.QPen(self.color, 1))
-##         painter.drawLine(self, QtCore.QPointF(self.x() + 15, self.y() + 15))
-
-##     def clearPath(self):
-##         """очистить шлейф"""
-##         self.path = QtGui.QPainterPath()
-##         self.path.moveTo(self)
 
 
 def init():
@@ -511,7 +524,3 @@ def init():
     form.setupUi(MainWindow)
     return app, form, MainWindow
 
-## if __name__ == '__main__':
-##     app, mainForm, window = init()
-##     window.show()
-##     sys.exit(app.exec_())
