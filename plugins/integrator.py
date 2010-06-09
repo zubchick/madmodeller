@@ -9,12 +9,12 @@ from base import Block
 
 class Integrator(Block):
     """ Интегратор """
+    name = u"Integrator"
+    doc = u'Интегратор производит численное интегрирование'
+    image = 'images/blocks/integrator.png'
+
     def __init__(self, k=1):
         Block.__init__(self)
 
-    name = u"Integrator"
-    doc = u'Интегратор интегрирует интегрированные интегралы'
-
     def execute(self):
-        pass
-
+        self.out_signals[0] = self.inp_signals[0] * self.time

@@ -12,11 +12,8 @@ class Gain(Block):
     def __init__(self, k=1):
         Block.__init__(self)
         self.changek = k
-        self.out = 5
-        self.inputs = [None] # обозначаем что вход 1н
-        self.outputs = [None] # обозначаем что выход 1н
-        self.inp_signals = {0:None}
-        self.out_signals = {0:None}
+        ## self.inputs = [None] # обозначаем что вход 1н
+        ## self.outputs = [None] # обозначаем что выход 1н
 
     image = 'images/blocks/gain.png'
     name = u"Gain"
