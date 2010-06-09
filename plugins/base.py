@@ -11,10 +11,12 @@ class Block(object):
 
         self._inp = 1
         self._out = 1
-        self.inp_signals = {} # значения сигналов
-        self.out_signals = {} # number:value = номер входа/выхода:значение
+        self.inp_signals = [None] # значения сигналов
+        self.out_signals = [None] # number:value = номер входа/выхода:значение
         self.type = ''
         self.defaults = {}
+        self.pure = True
+        self.time = 0
         # Все свойства, которым можно изменить через форму,
         # которая появляется по двойному клику на блоке,
         # должны иметь префикс "change" или "_change".
@@ -47,12 +49,19 @@ class Block(object):
         if value >= 0:
             self._out = value
 
+    @property
+    def can(self):
+        if None in self.inp_signals:
+            return False
+        else:
+            return True
+
     def get_out(self):
         """ Возвращает информацию о исходящих значениях
         в текстовом виде. """
-        string = u'<b>%s</b>\n' % self.name
-        for key, value in self.out_signals.items():
-            string += u'<b>{0}:</b> {1}\n'.format(key, value)
+        string = u'<b>%s</b>' % self.name
+        ## for key, value in self.out_signals.items():
+        ##     string += u'<b>{0}:</b> {1}\n'.format(key, value)
         return string
 
     def get_params(self):

@@ -7,7 +7,7 @@ import logger
 import prop
 import arrow as arr_ # вот так все сложно да.
 import flowlayout as flow
-
+import logica
 
 ## class Logger(object):
 ##     def __init__(self, output):
@@ -145,6 +145,9 @@ class MyMainWindow(QtGui.QMainWindow):
                                  u'Запуск', self.main)
         act_run.setShortcut('Ctrl+R')
         act_run.setStatusTip(u'Запуск симуляции')
+        MainWindow_.connect(act_run, QtCore.SIGNAL('triggered()'),
+                           self.start_sim)
+
 
         # help
         act_help = QtGui.QAction(QtGui.QIcon('images/help.png'),
@@ -316,8 +319,6 @@ class MyMainWindow(QtGui.QMainWindow):
             self.scene.mode = 'draw_line'
             print '%s mode set' % self.mode.capitalize()
             self.set_cursor('images/draw_line.png')
-            ## cursor = QtGui.QCursor(QtGui.QPixmap('images/draw_line.png'))
-            ## self.main.setCursor(cursor)
         elif self.mode == 'draw_line':
             self.set_normal_mode()
 
@@ -326,22 +327,23 @@ class MyMainWindow(QtGui.QMainWindow):
         self.mode = 'normal'
         self.scene.mode = 'normal'
         self.set_cursor()
-        ## cursor = QtGui.QCursor(QtCore.Qt.ArrowCursor)
-        ## self.main.setCursor(cursor)
         print '%s mode set' % self.mode.capitalize()
 
     def deleteItem(self):
         for item in self.scene.selectedItems():
             if isinstance(item, IBlock):
                 item.removeArrows()
+            elif isinstance(item, arr_.Arrow):
+                item.startItem.removeArrow(item)
+                item.endItem.removeArrow(item)
+                item.scene().remove_arrow(item)
             self.scene.removeItem(item)
 
-
-## class myQThread(QtCore.QThread):
-##     def run(self):
-##         from IPython.Shell import IPShellEmbed
-##         IPShellEmbed()()
-
+    def start_sim(self):
+        scheme = logica.Scheme(self.scene.arrows)
+        scheme.simulation()
+        ok = QtGui.QMessageBox.information(self, u'Симуляция завершилась успешно',
+                                   u"Симуляция завершена", QtGui.QMessageBox.Ok)
 
 class IBlock(QtGui.QGraphicsPixmapItem):
     def __init__(self, pixmap, parent = None, contextMenu = None):
@@ -379,6 +381,7 @@ class IBlock(QtGui.QGraphicsPixmapItem):
             arrow.startItem.removeArrow(arrow)
             arrow.endItem.removeArrow(arrow)
             self.scene().removeItem(arrow)
+            self.scene().remove_arrow(arrow)
 
     def addArrow(self, arrow):
         self.arrows.append(arrow)
@@ -407,9 +410,13 @@ class Scene(QtGui.QGraphicsScene):
         self.line = None
         self.parent = parent
         self.background = self.addPixmap(QtGui.QPixmap('')) # без фона
+        self.arrows = []
 
     def set_mode(self, mode):
         self.mode = mode
+
+    def remove_arrow(self, arrow):
+        self.arrows.remove(arrow)
 
     def mouseDoubleClickEvent(self, event):
         if event.button() != QtCore.Qt.LeftButton: # только левая клавиша мыши
@@ -418,11 +425,15 @@ class Scene(QtGui.QGraphicsScene):
         if self.mode == 'normal':
             try:
                 item = self.items(event.scenePos())[0]
-                property_window = prop.Property(self.parent)
-                property_window.setupUi(item.block)
-                property_window.show()
+                if item.block.pure:
+                    property_window = prop.Property(self.parent)
+                    property_window.setupUi(item.block)
+                    property_window.show()
+                else:
+                    item.block.show()
+
                 print 'You doubleClecked ', item.block
-            except IndexError:
+            except: # IndexError:
                 super(Scene, self).mouseDoubleClickEvent(event)
 
     def mousePressEvent(self, event):
@@ -500,11 +511,11 @@ class Scene(QtGui.QGraphicsScene):
                     inp = 1
 
                 arrow = arr_.Arrow(startItem, endItem, inp)
-                ## arrow.setColor(QtCore.Qt.black)
                 startItem.addArrow(arrow)
                 endItem.addArrow(arrow)
                 arrow.setZValue(1)
                 self.addItem(arrow)
+                self.arrows.append(arrow)
 
         self.line = None
         super(Scene, self).mouseReleaseEvent(event)
